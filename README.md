@@ -1,2 +1,0 @@
-# JSON-RNC
-JSON-RNC
