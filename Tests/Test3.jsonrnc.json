@@ -1,0 +1,73 @@
+{
+   "definitions": {
+      "Product": {
+         "required": [
+            "id",
+            "name",
+            "price"
+         ],
+         "type": "object",
+         "properties": {
+            "dimensions": {
+               "required": [
+                  "length",
+                  "width",
+                  "height"
+               ],
+               "type": "object",
+               "properties": {
+                  "width": {
+                     "type": "number"
+                  },
+                  "length": {
+                     "type": "number"
+                  },
+                  "height": {
+                     "type": "number"
+                  }
+               }
+            },
+            "tags": {
+               "items": {
+                  "type": "string"
+               },
+               "type": "array"
+            },
+            "price": {
+               "exclusiveMinimum": true,
+               "minimum": 0,
+               "type": "number"
+            },
+            "warehouseLocation": {
+               "$ref": "#/definitions/geo"
+            },
+            "id": {
+               "type": "integer"
+            },
+            "name": {
+               "type": "string"
+            }
+         }
+      },
+      "geo": {
+         "required": [
+            "latitude",
+            "longitude"
+         ],
+         "type": "object",
+         "properties": {
+            "latitude": {
+               "type": "number"
+            },
+            "longitude": {
+               "type": "number"
+            }
+         }
+      }
+   },
+   "$schema": "http://json-schema.org/draft-04/schema#",
+   "type": "array",
+   "items": {
+      "$ref": "#/definitions/Product"
+   }
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "books": [
+      {
+        "title": "Mijn leuk wereldje",
+        "author": "Richard Scarry",
+        "ISBN": "978-9024380329",
+        "weight": 112,
+        "type": "Paperback"
+      },
+      {
+        "title": "Principia Discordia",
+        "subtitle": "Or, How I Found Goddess and What I Did to Her When I Found Her: The Magnum Opiate of Malaclypse the Younger",
+        "author": "Malaclypse the Younger",
+        "ISBN": "978-1559500401",
+        "weight": 130.4,
+        "type": "Hardcover",
+        "number": 48,
+        "$id":  "C4567"
+      }
+    ],
+    "owner": "George Clooney"
+  },
+  {
+    "books": [],
+    "owner": "George Bush"
+  },
+  {
+    "name": "Amazon",
+    "url": "http://www.amazon.com"
+  },
+  {
+    "name": "Lulu",
+    "url": "http://www.lulu.com"
+  }
+]

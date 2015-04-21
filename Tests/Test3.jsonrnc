@@ -1,0 +1,10 @@
+## schéma correspondant à l'exemple http://json-schema.org/example1.html
+start = [Product]
+Product = {id:integer,
+           name:string,
+           price:number@(minimum=0,exclusiveMinimum=true),
+           tags?:[string],
+           dimensions?:{length:number,width:number,height:number},
+           warehouseLocation?:geo
+       }
+geo = {latitude:number,longitude:number}

@@ -1,0 +1,11 @@
+## a comment to skip
+# test of error recovery in the parse
+start = [person]
+tst = {a:b}
+person = {name:string,
+          id:(string|{no:number,w:string}),
+          address:number@(minimum=10, maximum=100 exclusiveMinimum=true),
+          postalCode? : [cpRE]
+}
+cpRE = /[A-Z][0-9][A-Z] [0-9][A-Z][0-9]/
+b=[({w:null, c:integer})]

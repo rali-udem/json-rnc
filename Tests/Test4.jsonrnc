@@ -1,0 +1,8 @@
+## a comment to skip
+start = [person]
+person = {name:string,
+          id:(string|{no:number}),
+          address:number@(minimum=10,maximum=100,exclusiveMinimum=true),
+          postalCode? : cpRE
+}
+cpRE = /[A-Z][0-9][A-Z] [0-9][A-Z][0-9]/

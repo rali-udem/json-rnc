@@ -1,0 +1,6 @@
+##  schéma correspondant à l'exemple http://jsonschema.net/#/home
+debut = {
+    address:{ streetAddress?: string, city: string},
+    phoneNumber:[{location:string, code:integer}]
+}
+start=debut

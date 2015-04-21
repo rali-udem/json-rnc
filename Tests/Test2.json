@@ -1,0 +1,23 @@
+{
+  "address": {
+    "streetAddress": "21 2nd Street",
+    "city": "New York"
+  },
+  "phoneNumber": [
+    {
+      "location": "home",
+      "code": 44
+    }
+  ]
+}
+
+{"address":{"city":"Montréal","streetAddress":"St-Laurent"},
+ "phoneNumber":[{"location":"office","code":47493}]}
+
+{"address":{"city":"Québec"},
+ "phoneNumber":[{"location":"home","code":345},{"location":"mobile","code":false}]}
+ 
+{}
+[345]
+"bonjour"
+{"address":{"city":"Paris"},"phoneNumber":[]}

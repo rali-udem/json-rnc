@@ -1,0 +1,47 @@
+{
+   "definitions": {
+      "debut": {
+         "required": [
+            "address",
+            "phoneNumber"
+         ],
+         "type": "object",
+         "properties": {
+            "phoneNumber": {
+               "items": {
+                  "required": [
+                     "location",
+                     "code"
+                  ],
+                  "type": "object",
+                  "properties": {
+                     "code": {
+                        "type": "integer"
+                     },
+                     "location": {
+                        "type": "string"
+                     }
+                  }
+               },
+               "type": "array"
+            },
+            "address": {
+               "required": [
+                  "city"
+               ],
+               "type": "object",
+               "properties": {
+                  "city": {
+                     "type": "string"
+                  },
+                  "streetAddress": {
+                     "type": "string"
+                  }
+               }
+            }
+         }
+      }
+   },
+   "$schema": "http://json-schema.org/draft-04/schema#",
+   "$ref": "#/definitions/debut"
+}

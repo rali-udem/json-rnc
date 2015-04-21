@@ -1,0 +1,17 @@
+## adaptation of the "contrived example" of relax-json given at
+##     https://github.com/eteeselink/relax-json
+
+start = [(BookList | Store)]
+
+BookList = { books: [ Book ], owner: string }
+
+Book = {
+  title: string, subtitle?: string, author: string,
+  ISBN: string,  weight: number,    type: BookType,
+  # add keys with 'special' names
+  "number"?: integer, "$id"?: string 
+}
+
+Store = { name: string, url: string }
+
+BookType = (/Paperback/ | /Hardcover/)
