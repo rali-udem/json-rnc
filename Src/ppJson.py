@@ -23,7 +23,11 @@ def ppJson(file,obj,level=0):
             outQuoted(file,obj.replace('\\','\\\\').replace('"','\\"'))
         else: 
             outQuoted(file,obj)
-    elif isinstance(obj,(int,float,bool)) or obj==None:
+    elif obj==None:
+        out(file,"none")
+    elif type(obj) is bool:
+        out(file,"true" if obj else "false")
+    elif isinstance(obj,(int,float)):
         out(file,str(obj))
     elif type(obj) is dict:
         out(file,"{")

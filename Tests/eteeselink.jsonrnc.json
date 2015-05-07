@@ -1,97 +1,36 @@
-{
-   "definitions": {
-      "Book": {
-         "required": [
-            "title",
-            "author",
-            "ISBN",
-            "weight",
-            "type"
-         ],
-         "type": "object",
-         "properties": {
-            "ISBN": {
-               "type": "string"
-            },
-            "weight": {
-               "type": "number"
-            },
-            "author": {
-               "type": "string"
-            },
-            "$id": {
-               "type": "string"
-            },
-            "subtitle": {
-               "type": "string"
-            },
-            "title": {
-               "type": "string"
-            },
-            "type": {
-               "$ref": "#/definitions/BookType"
-            },
-            "number": {
-               "type": "integer"
-            }
-         }
-      },
-      "BookList": {
-         "required": [
-            "books",
-            "owner"
-         ],
-         "type": "object",
-         "properties": {
-            "owner": {
-               "type": "string"
-            },
-            "books": {
-               "items": {
-                  "$ref": "#/definitions/Book"
-               },
-               "type": "array"
-            }
-         }
-      },
-      "Store": {
-         "required": [
-            "name",
-            "url"
-         ],
-         "type": "object",
-         "properties": {
-            "url": {
-               "type": "string"
-            },
-            "name": {
-               "type": "string"
-            }
-         }
-      },
-      "BookType": {
-         "oneOf": [
-            {
-               "pattern": "Paperback",
-               "type": "string"
-            },
-            {
-               "pattern": "Hardcover",
-               "type": "string"
-            }
-         ]
-      }
-   },
-   "$schema": "http://json-schema.org/draft-04/schema#",
-   "type": "array",
-   "items": {
-      "oneOf": [
-         {
-            "$ref": "#/definitions/BookList"
-         },
-         {
-            "$ref": "#/definitions/Store"
-         }
-      ]
-   }
-}
+{"definitions":{"Book":{"required":["title",
+                                    "author",
+                                    "ISBN",
+                                    "weight",
+                                    "type"],
+                        "type":"object",
+                        "properties":{"ISBN":{"type":"string"},
+                                      "weight":{"type":"number"},
+                                      "author":{"type":"string"},
+                                      "$id":{"type":"string"},
+                                      "subtitle":{"type":"string"},
+                                      "title":{"type":"string"},
+                                      "type":{"$ref":"#/definitions/BookType"},
+                                      "number":{"type":"integer"}}},
+                "start":{"items":{"oneOf":[{"$ref":"#/definitions/BookList"},
+                                           {"$ref":"#/definitions/Store"}]},
+                         "type":"array"},
+                "BookList":{"required":["books",
+                                        "owner"],
+                            "type":"object",
+                            "properties":{"owner":{"type":"string"},
+                                          "books":{"items":{"$ref":"#/definitions/Book"},
+                                                   "type":"array"}}},
+                "Store":{"required":["name",
+                                     "url"],
+                         "type":"object",
+                         "properties":{"url":{"type":"string"},
+                                       "name":{"type":"string"}}},
+                "BookType":{"oneOf":[{"pattern":"Paperback",
+                                      "type":"string"},
+                                     {"pattern":"Hardcover",
+                                      "type":"string"}]}},
+ "$schema":"http://json-schema.org/draft-04/schema#",
+ "type":"array",
+ "items":{"oneOf":[{"$ref":"#/definitions/BookList"},
+                   {"$ref":"#/definitions/Store"}]}}

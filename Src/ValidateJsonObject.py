@@ -3,9 +3,10 @@
 
 ####### Validation of a JSON object according to a JSON-rnc schema
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
+##   revision for adding statistics on error messages, May 2015
 ########################################################################
 
-## truc pour afficher du UTF-8 dans la console TextMate
+## for displaying UTF-8 in the Textmate console
 import sys 
 reload(sys) 
 sys.setdefaultencoding("utf-8")
@@ -17,10 +18,10 @@ traceValidate=False
 # global schema
 rootSchema=None
 
-def errorValidate(sels,mess):
-    return "%s :: %s\n"%("/".join(sels),mess)
-def errorSchema(sels,mess):
-    return "! Error in schema ! "+errorValidate(sels,mess)
+def errorValidate(sels,mess,infos):
+    return "%s\t%s\t%s\n"%("/".join(sels),mess,infos)
+def errorSchema(sels,mess,infos):
+    return "! Error in schema !\t"+errorValidate(sels,mess,infos)
     
 def isString(value):
     return isinstance(value,(str,unicode))
@@ -68,7 +69,7 @@ def validate(sels,schema,parent,o):
                 if "required" in schema:
                     return validateProperties(sels,schema['properties'],schema['required'],schema,o)
                 else:
-                    return errorSchema(sels,"'required' field not in schema")
+                    return errorSchema(sels,"'required' field not in schema","")
             else:
                 return "" # no validation when there is no property field
         if theType in ["integer","number","boolean","string","boolean","null"]:
@@ -89,9 +90,9 @@ def validate(sels,schema,parent,o):
                 else:
                     return "" # no validation when no item is defined...
             else:
-                return errorValidate(sels,"tableau attendu=>"+showVal(o))
+                return errorValidate(sels,"array expected:",showVal(o))
         else:
-            return errorSchema(sels,"type inattendu=>"+str(theType))
+            return errorSchema(sels,"unexpected type:",str(theType))
     if "$ref" in schema: # hack qui remplace dans le schéma la référence au type par sa définition
         try:
             typeref=schema["$ref"]
@@ -101,14 +102,14 @@ def validate(sels,schema,parent,o):
             return validate(sels+["("+typeref+")"],schema,parent,o)
         except NameError as err: # ici si on ne peut déréfencer...
             return str(err)+" in "+typeref
-    return errorSchema(sels,"Schema sans type, ni $ref:"+showVal(schema))
+    return errorSchema(sels,"Schema without type, nor $ref:",showVal(schema))
 
 def validateProperties(sels,props,required,parent,obj):
     global traceValidate
     if traceValidate:print "$$validateProperties:%s:%s:%s"%(showVal(props),str(required),showVal(obj))
     valid=""
     if not(type(obj) is dict):
-        return errorValidate(sels,"object expected:"+showVal(obj))
+        return errorValidate(sels,"object expected:",showVal(obj))
     # validate required fields
     for field in required:
         if field in obj:
@@ -117,7 +118,7 @@ def validateProperties(sels,props,required,parent,obj):
             if field in obj:
                 valid+=validate(newSels,props[field],parent,obj[field])
         else:
-            valid+=errorValidate(sels,"missing required field =>"+field)
+            valid+=errorValidate(sels,"missing required field:"+field,"")
     # validate the other fields of the object
     # validate if fields are present or not
     for field in iter(obj):
@@ -127,7 +128,7 @@ def validateProperties(sels,props,required,parent,obj):
             if field in props:
                 valid+=validate(newSels,props[field],parent,obj[field])
             else:
-                valid+=errorValidate(sels,"unexpected field in object =>"+field)
+                valid+=errorValidate(sels,"unexpected field in object:"+field,"")
     return valid
 
 def validateSimpleType(sels,schemaType,value):
@@ -135,20 +136,20 @@ def validateSimpleType(sels,schemaType,value):
     if traceValidate:print "$$validateSimpleType:%s:%s:%s"%(str(schemaType),showVal(value),str(type(value)))
     if schemaType=="string":
         return "" if isString(value) \
-                  else errorValidate(sels,"string expected =>"+showVal(value)) 
+                  else errorValidate(sels,"string expected:",showVal(value)) 
     if schemaType=="integer":
         return "" if type(value) is int \
-                  else errorValidate(sels,"integer expected =>"+showVal(value))
+                  else errorValidate(sels,"integer expected:",showVal(value))
     if schemaType=="number":
         return "" if isinstance(value,(int,float)) \
-                  else errorValidate(sels,"number expected =>"+showVal(value))
+                  else errorValidate(sels,"number expected:",showVal(value))
     if schemaType=="boolean":
         return "" if type(value) is bool \
-                  else errorValidate(sels,"boolean expected =>"+showVal(value))
+                  else errorValidate(sels,"boolean expected:",showVal(value))
     if schemaType=="null":
         return "" if value==None \
-                  else errorValidate(sels,"null expected =>"+showVal(value))
-    return errorSchema(sels,"unknown schemaType =>"+schemaType)
+                  else errorValidate(sels,"null expected:",showVal(value))
+    return errorSchema(sels,"unknown schemaType:",schemaType)
 
 def validateFacets(sels,schema,value):
     global traceValidate
@@ -161,43 +162,71 @@ def validateFacets(sels,schema,value):
                 low=schema["minimum"]
                 if "exclusiveMinimum" in schema and schema["exclusiveMinimum"]:
                    if value <= low : 
-                       valid+=errorValidate(sels,"illegal value: "+str(value)+" <= "+ str(low))
+                       valid+=errorValidate(sels,"illegal value:",str(value)+" <= "+ str(low))
                 elif value < low :
-                       valid+=errorValidate(sels,"illegal value: "+str(value)+" < "+str(low))
+                       valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(low))
             if "maximum" in schema:
                 high=schema["maximum"]
                 if "exclusiveMaximum" in schema and schema["exclusiveMaximum"]:
                    if value >= high : 
-                       valid+=errorValidate(sels,"illegal value: "+str(value)+" >= "+ str(high))
+                       valid+=errorValidate(sels,"illegal value:",str(value)+" >= "+ str(high))
                 elif value > high :
-                   valid+=errorValidate(sels,"illegal value: "+str(value)+" < "+str(high))
+                   valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(high))
         else:
-            valid+=errorValidate(sels,"numeric value expected: "+value)
+            valid+=errorValidate(sels,"numeric value expected:",value)
     if theType=="string":
         if isString(value):
             if "pattern" in schema:
                 regex=schema["pattern"]
                 valid += "" if re.match(regex,value) \
-                            else errorValidate(sels,"no match:"+regex+"<>"+value)
+                            else errorValidate(sels,"no match:",regex+"<>"+value)
             length=len(value)
             if "minLength" in schema :
                 low = schema["minLength"]
                 if length<low:
-                    valid+=errorValidate(sel,"illegal length:"+str(value)+" < "+low)
+                    valid+=errorValidate(sel,"illegal length:",str(value)+" < "+low)
             if "maxLength" in schema :
                 high = schema["maxLength"]
                 if length>high:
-                    valid+=errorValidate(sel,"illegal length:"+str(value)+" > "+low)
+                    valid+=errorValidate(sel,"illegal length:",str(value)+" > "+low)
         else:
-            valid+=errorValidate(sels,"string expected:"+str(value))
+            valid+=errorValidate(sels,"string expected:",str(value))
     return valid
 
+### show n ,an integer, with a space as a blank separator right aligned 
+##              in a field of 'width' chars (expanded if necessary)
+##  I have never managed to understand how to use the locale aware thousand separator       
+def showNum(n,width=0):
+    s=str(n)
+    res=""
+    while len(s)>3:
+        res=" "+s[-3:]+res
+        s=s[:-3]
+    s+=res
+    return (width-len(s))*" "+s
+
+# error type table for statistics
+errorTable={}
+def printErrorStatistics():
+    global errorTable
+    errors=sorted(errorTable.items(),key=lambda i:i[1],reverse=True)
+    print "Error Statistics"
+    for (mess,nb) in errors:
+        print showNum(nb,15)+"\t"+mess
+
 ## validate a single json object (json), identified by recordId (a string), according to a json schema
-def validateObject(obj,recordId, schema):
-    global rootSchema
+def validateObject(obj,recordId, schema,logMessages):
+    global rootSchema,errorTable
     rootSchema=schema
     mess=validate([],schema,None,obj)
     if mess!="":
-        print recordId+":"+showVal(obj,100)+"\n"+mess
+        if logMessages:
+            print recordId+":"+showVal(obj,100)+"\n"+mess,
+        for messLine in mess.split("\n")[0:-1]: ## mess can contain more than one error message
+            messType=":".join(messLine.split("\t")[0:2])
+            if messType in errorTable: 
+                errorTable[messType]+=1
+            else: 
+                errorTable[messType]=1
         return False
     return True

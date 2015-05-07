@@ -3,9 +3,10 @@
 
 ####### Validation of a JSON file according to a JSON-rnc schema
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
+##   revision for adding statistics on error messages, May 2015
 ########################################################################
 
-## truc pour afficher du UTF-8 dans la console TextMate
+## for displaying UTF-8 in the Textmate console
 import sys 
 reload(sys) 
 sys.setdefaultencoding("utf-8")
@@ -17,8 +18,7 @@ traceRead=False
 
 from ParseJsonRnc       import parseJsonRnc,ppJson
 from SplitJson          import jsonSplitter
-from ValidateJsonObject import validateObject,errorSchema
-
+from ValidateJsonObject import validateObject,errorSchema,printErrorStatistics,showNum
 
 # recursively search for a value in an object
 # sels is a list of field names
@@ -31,10 +31,10 @@ def select(sels,obj):
         return None
 
 ###########
-### validate a series of json objects within a file according to a schema
-#
-def validateObjects(schema,idStr,fileName):
-    if traceRead:print "validateObjects(%s,%s)"%(schema,fileName)
+### validate a stream of json objects within a file according to a schema
+#   prints the number of invalid objects
+#   when no message are logged, print something on stderr every 10000 records
+def validateStream(schema,idStr,stream,logMessages):
     if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-04/schema#':
         print errorSchema([],"bad schema!!!")
         return
@@ -42,7 +42,7 @@ def validateObjects(schema,idStr,fileName):
     nb=0
     nbInvalid=0
     nbBad=0
-    for inJson in jsonSplitter((open(fileName) if fileName!=None else sys.stdin).read()):
+    for inJson in stream:
         try:
             if traceRead:print "$$$inJson="+inJson
             obj=json.loads(inJson)
@@ -52,48 +52,34 @@ def validateObjects(schema,idStr,fileName):
                 val=idFn(obj)
                 if val!=None:
                     id=val
-            if not(validateObject(obj,id,schema)):
+            if not(validateObject(obj,id,schema,logMessages)):
                 nbInvalid+=1
+            if not(logMessages) and nb%10000==0:
+                sys.stderr.write("Processing record "+str(nb)+"\n")
         except ValueError as mess:
-            print "Item "+str(nb)+": bad json object:"+str(mess)
+            if logMessages:
+                print "Item "+str(nb)+": bad json object:"+str(mess)
             nbBad+=1
     if nbInvalid==0 and nbBad==0:
-        print "All %d objects are valid"%nb
+        print "All "+showNum(nb)+" objects are valid"
     else:
-        print "%d objects read: %d invalid, %d bad"%(nb,nbInvalid,nbBad)
+        print showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad"
+    return nbInvalid
+
+
+###########
+### validate a series of json objects within a file according to a schema
+#   returns the number of invalid objects
+def validateObjects(schema,idStr,fileName,logMessages):
+    if traceRead:print "validateObjects(%s,%s)"%(schema,fileName)
+    return validateStream(schema,idStr,jsonSplitter((open(fileName) if fileName!=None else sys.stdin).read()),logMessages)
 
 ### 
 #  validate lines in a file each of which is json object
-def validateLines(schema,idStr,fileName):
+#  returns the number of invalid lines
+def validateLines(schema,idStr,fileName,logMessages):
     if traceRead:print "validateLines(%s,%s)"%(schema,fileName)
-    if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-04/schema#':
-        print errorSchema([],"bad schema!!!")
-        return
-    nb=0
-    nbInvalid=0
-    nbBad=0
-    idFn=None if idStr==None else lambda o:select(idStr.split("/"),o)
-    for line in (open(fileName) if fileName!=None else sys.stdin):
-        try:
-            nb+=1
-            if traceRead:print "$$$line "+str(nb)+"="+line
-            obj=json.loads(line)
-            id=str(nb)
-            if idFn!=None:
-                val=idFn(obj)
-                if val!=None:
-                    id=val
-            if not(validateObject(obj,str(id),schema)):
-                nbInvalid+=1
-        except ValueError as mess:
-            print "Line "+str(nb)+": bad json object:"+str(mess)
-            # print line
-            nbBad+=1
-    if nbInvalid==0 and nbBad==0:
-        print "All %d objects are valid"%nb
-    else:
-        print "%d objects read: %d invalid, %d bad"%(nb,nbInvalid,nbBad)
-        
+    return validateStream(schema,idStr,open(fileName) if fileName!=None else sys.stdin,logMessages)        
 
 ## taken from http://stackoverflow.com/questions/237079/how-to-get-file-creation-modification-date-times-in-python
 def modificationDate(filename):
@@ -133,11 +119,14 @@ def getSchema(jsonrncFile):
 
 
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser(description="Parse a JSON-rnc schema and validate a JSON file according to it.")
+    parser=argparse.ArgumentParser(description="Parse a JSON-rnc schema and validate a JSON file according to it. "+
+                            "The number of invalid objects (modulo 256) is returned as the exit code of the program.")
     parser.add_argument("--split","-s",help="Separate the input JSON objects each a single line.",action="store_true")
     parser.add_argument("--debug",help="Trace calls for debugging",action="store_true")
     parser.add_argument("-id",help="use this selector as a list of keys each separated by a slash, a.k.a. JSON pointer, (e.g. '_id/$oid') "
                                    "for identifying records in error messages instead of line numbers")
+    parser.add_argument("--stats","-st",help="Output statistics about error messages",action="store_true")
+    parser.add_argument("--nolog",help="Do not log error messages",action="store_true")
     parser.add_argument("schema",help="name of file containing the schema")
     parser.add_argument("json_file",help="name of the JSON file to validate",nargs='?')
     args=parser.parse_args()
@@ -145,6 +134,10 @@ if __name__ == '__main__':
     schema = getSchema(args.schema)
     if schema!=None:
         if args.split:
-            validateObjects(schema,args.id,args.json_file)
+            nbInvalid=validateObjects(schema,args.id,args.json_file,not(args.nolog))
         else:
-            validateLines(schema,args.id,args.json_file)
+            nbInvalid=validateLines(schema,args.id,args.json_file,not(args.nolog))
+        if args.stats:
+            printErrorStatistics()
+        exit(nbInvalid) # return the number of errors but in Linux it is given modulo 256...
+
