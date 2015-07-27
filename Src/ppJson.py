@@ -15,14 +15,14 @@ import json
 ##   that I find more readable
 
 def out(file,s):file.write(s)
-def outQuoted(file,s):out(file,'"'+s+'"')
+def outQuoted(file,s):
+    if '\\' in s: s=s.replace('\\','\\\\')
+    if '"'  in s: s=s.replace('"','\\"')
+    out(file,'"'+s+'"')
 
 def ppJson(file,obj,level=0):
     if isinstance(obj,(str,unicode)):
-        if '"' in obj or '\\' in obj:
-            outQuoted(file,obj.replace('\\','\\\\').replace('"','\\"'))
-        else: 
-            outQuoted(file,obj)
+        outQuoted(file,obj)
     elif obj==None:
         out(file,"none")
     elif type(obj) is bool:
