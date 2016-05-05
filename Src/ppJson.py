@@ -24,7 +24,7 @@ def ppJson(file,obj,level=0):
     if isinstance(obj,(str,unicode)):
         outQuoted(file,obj)
     elif obj==None:
-        out(file,"none")
+        out(file,"null")
     elif type(obj) is bool:
         out(file,"true" if obj else "false")
     elif isinstance(obj,(int,float)):
@@ -43,10 +43,12 @@ def ppJson(file,obj,level=0):
         out(file,"}")
     elif type(obj) is list:
         out(file,"[")
+        # indent only if one of the elements of the array are an object or a list
+        indent=any([type(elem) is dict or type(elem) is list for elem in obj])
         n=len(obj)
         i=1
         for elem in obj:
-            if i>1: out(file,"\n"+(level+1)*" ")
+            if indent and i>1: out(file,"\n"+(level+1)*" ")
             ppJson(file,elem,level+1)
             if i<n: out(file,",")
             i+=1
