@@ -325,10 +325,12 @@ def parseFacets(theType):
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
                         if token.kind == "NUMBER":
-                            facets.append({ident:ident})
+                            facets.append({ident:int(token.value)})
                             token=tokenizer.next()
-                            if theType!= None and theType not in ["number","integer"]:
+                            if theType!= None and ident in ["minimum","maximum"] and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
+                            elif theType!= None and ident in ["minLength","maxLength"] and theType !="string":
+                                errorJsrnc("parseFacets","facet "+ident+" only applicable to string types",None);
                         else: 
                             errorJsrnc("parseFacets","number expected in facet "+ident,["NUMBER"])
                     else: 

@@ -1,0 +1,23 @@
+start = job
+chaine10=string@(minLength=10)
+job = {
+    _id : {"$oid":string},
+    job_id:string,
+    date_update:string,
+    description:chaine10,
+    title:chaine10,
+    url:chaine10,
+    place?:string,
+    company_name?:string,
+    # champs optionnels dans Indeed
+    url_secondary?: chaine10,
+    ref_external?:chaine10
+    # champs optionnels dans CadreEmploi
+    profile?:chaine10,
+    ref?:string,
+    company_desc?:chaine10,
+    publication_date:string,
+    contract_type:string,
+    industry:string,
+    contact:string
+}

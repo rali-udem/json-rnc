@@ -184,11 +184,11 @@ def validateFacets(sels,schema,value):
             if "minLength" in schema :
                 low = schema["minLength"]
                 if length<low:
-                    valid+=errorValidate(sel,"illegal length:",str(value)+" < "+low)
+                    valid+=errorValidate(sels,"illegal length:",str(length)+" < "+str(low))
             if "maxLength" in schema :
                 high = schema["maxLength"]
                 if length>high:
-                    valid+=errorValidate(sel,"illegal length:",str(value)+" > "+low)
+                    valid+=errorValidate(sels,"illegal length:",str(length)+" > "+str(high))
         else:
             valid+=errorValidate(sels,"string expected:",str(value))
     return valid
