@@ -195,20 +195,20 @@ We implemented the validation in Python in two steps.
 
 **Validation** of a JSON file (`f.json`) in which each line is a JSON object validated according to a JSON-RNC schema:
 
-    `./ValidateJsonRnc schema.jsonrnc f.json`
+    ./ValidateJsonRnc.py schema.jsonrnc f.json
 
 - If JSON objects are not on a single line, adding `-s` optional flag will split and merge them on a single line.
 - Objects that do not conform to the schema are usually identified by their line number in the file. If another field or sequence of fields could prove more useful as identification, it can be specified as the value for the `-id` optional flag. Its value is a list of keys each separated by a slash (e.g. `'_id/$oid'`) ([JSON Pointer][] notation).
 
 **Splitting and flattening of a JSON file** can be done with:
 
-    `./SplitJson.py`
+    ./SplitJson.py
 
 If the JSON file has objects spanning many lines of the input, its format can be reorganized with this filter that reads the standard input for JSON objects and outputs each JSON object on a single line. Newlines within strings are replaced with `\n` so that they are correctly read back.
 
 **Parsing** the schema can be also done separately to produce on stdout a pretty-printed JSON file with the Python data structure using:
 
-`./ParseJsonRnc.py schema.jsonrnc`
+    ./ParseJsonRnc.py schema.jsonrnc
 
 If no schema file is given it will process the standard input.
 
