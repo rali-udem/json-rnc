@@ -30,6 +30,17 @@ def select(sels,obj):
     else: 
         return None
 
+# detect possible duplicate pairs in a Json object
+# adapted from http://stackoverflow.com/questions/16172011/json-in-python-receive-check-duplicate-key-error
+def duplicate_check_hook(pairs):
+    result = dict()
+    for key,val in pairs:
+        if key in result:
+            raise KeyError("duplicate key: "+key)
+        result[key]=val
+    return result
+
+
 ###########
 ### validate a stream of json objects within a file according to a schema
 #   prints the number of invalid objects
@@ -42,11 +53,12 @@ def validateStream(schema,idStr,stream,logMessages):
     nb=0
     nbInvalid=0
     nbBad=0
+    nbDup=0
     for inJson in stream:
         try:
             if traceRead:print "$$$inJson="+inJson
-            obj=json.loads(inJson)
             nb+=1
+            obj=json.loads(inJson,object_pairs_hook=duplicate_check_hook)
             id=str(nb)
             if idFn!=None:
                 val=idFn(obj)
@@ -60,10 +72,14 @@ def validateStream(schema,idStr,stream,logMessages):
             if logMessages:
                 print "Item "+str(nb)+": bad json object:"+str(mess)
             nbBad+=1
-    if nbInvalid==0 and nbBad==0:
+        except KeyError as mess:
+            if logMessages:
+                print "Item "+str(nb)+":"+mess.args[0]
+            nbDup+=1
+    if nbInvalid==0 and nbBad==0 and nbDup==0:
         print "All "+showNum(nb)+" objects are valid"
     else:
-        print showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad"
+        print showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad, " + showNum(nbDup)+ " with duplicate fields"
     return nbInvalid
 
 
