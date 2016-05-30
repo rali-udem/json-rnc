@@ -18,7 +18,7 @@ traceRead=False
 
 from ParseJsonRnc       import parseJsonRnc,ppJson
 from SplitJson          import jsonSplitter
-from ValidateJsonObject import validateObject,errorSchema,printErrorStatistics,showNum
+from ValidateJsonObject import validateObject,errorSchema,printErrorStatistics,printErrorIdList,showNum
 
 # recursively search for a value in an object
 # sels is a list of field names
@@ -127,6 +127,7 @@ if __name__ == '__main__':
                                    "for identifying records in error messages instead of line numbers")
     parser.add_argument("--stats","-st",help="Output statistics about error messages",action="store_true")
     parser.add_argument("--nolog",help="Do not log error messages",action="store_true")
+    parser.add_argument("--sed",help="Output list of erroneous ids in sed compatible format",action="store_true")
     parser.add_argument("schema",help="name of file containing the schema")
     parser.add_argument("json_file",help="name of the JSON file to validate",nargs='?')
     args=parser.parse_args()
@@ -139,5 +140,7 @@ if __name__ == '__main__':
             nbInvalid=validateLines(schema,args.id,args.json_file,not(args.nolog))
         if args.stats:
             printErrorStatistics()
+        if args.sed:
+            printErrorIdList()
         exit(nbInvalid) # return the number of errors but in Linux it is given modulo 256...
 

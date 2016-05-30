@@ -214,12 +214,19 @@ def printErrorStatistics():
     for (mess,nb) in errors:
         print showNum(nb,15)+"\t"+mess
 
+# list of ids of erroneous objects
+errorIdList=[]
+def printErrorIdList():
+    global errorIdList
+    print ";".join([id+"p" for id in errorIdList])
+
 ## validate a single json object (json), identified by recordId (a string), according to a json schema
 def validateObject(obj,recordId, schema,logMessages):
-    global rootSchema,errorTable
+    global rootSchema,errorTable,errorIdList
     rootSchema=schema
     mess=validate([],schema,None,obj)
     if mess!="":
+        errorIdList.append(recordId)
         if logMessages:
             print recordId+":"+showVal(obj,100)+"\n"+mess,
         for messLine in mess.split("\n")[0:-1]: ## mess can contain more than one error message
