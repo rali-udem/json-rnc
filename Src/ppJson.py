@@ -56,6 +56,14 @@ def ppJson(file,obj,level=0):
     if level==0:out(file,"\n")
 
 if __name__ == '__main__':
-    obj=json.load(sys.stdin)
-    ppJson(sys.stdout,obj)
+    # read many json objects from stdin, each object possibly spanning more than one line
+    # taken from: http://stackoverflow.com/questions/20400818/python-trying-to-deserialize-multiple-json-objects-in-a-file-with-each-object-s
+    for line in sys.stdin:
+        while True:
+            try:
+                obj=json.loads(line)
+                ppJson(sys.stdout,obj)
+                break
+            except:
+                line += next(sys.stdin)
 
