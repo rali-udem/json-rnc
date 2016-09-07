@@ -177,7 +177,7 @@ def validateFacets(sels,schema,value):
     if theType=="string":
         if isString(value):
             if "pattern" in schema:
-                regex=schema["pattern"]
+                regex="^"+schema["pattern"]+"$"   # do an "anchored match" of the regex
                 valid += "" if re.match(regex,value) \
                             else errorValidate(sels,"no match:",regex+"<>"+value)
             length=len(value)

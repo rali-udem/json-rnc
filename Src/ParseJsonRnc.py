@@ -7,6 +7,7 @@
 
 
 import sys,re,json,codecs,datetime,argparse
+from ppJson             import ppJson
 
 ## flags for debugging
 traceParse=False
@@ -87,7 +88,7 @@ class Token:
 #                | "/", character-"/" , "/"                               (* regular expression without a slash *)
 #               ) , [facets]
 #               | "{" , [properties] , "}"                                (* object *)
-#               | "[" , [type]  , "]"                                     (* array *)
+#               | "[" , [types]  , "]"                                     (* array *)
 #               | "(" , types   , ")" ;                                   (* grouping *)
 # properties  = property , {[","] , property} ;
 # property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
@@ -222,7 +223,7 @@ def parseType():
             token=tokenizer.next()
             res={"type":"array"}
         else:
-            res = {"type":"array","items":parseType()}
+            res = {"type":"array","items":parseTypes()}
             if token.kind == "CLOSE_BRACKET":
                 token=tokenizer.next()
             else:
@@ -398,50 +399,6 @@ def parseJsonRnc(jsonrncContent):
         if ref not in defs:
             errorJsrnc("main","no definition found for "+ref,None)
     return schema if errorsInSchema==0 else errorsInSchema
-
-#### prettyprint a JSON in more compact form
-##   that I find more readable than what is produced by
-##     json.dump(schema,sys.stdout,indent=3,separators=(',', ':')) 
-
-def out(file,s):file.write(s)
-def outQuoted(file,s):out(file,'"'+s+'"')
-
-def ppJson(file,obj,level=0):
-    if isinstance(obj,(str,unicode)):
-        if '"' in obj or '\\' in obj:
-            outQuoted(file,obj.replace('\\','\\\\').replace('"','\\"'))
-        else: 
-            outQuoted(file,obj)
-    elif obj==None:
-        out(file,"none")
-    elif type(obj) is bool:
-        out(file,"true" if obj else "false")
-    elif isinstance(obj,(int,float)):
-        out(file,str(obj))
-    elif type(obj) is dict:
-        out(file,"{")
-        n=len(obj)
-        i=1
-        for key in obj:
-            if i>1 : out(file,"\n"+(level+1)*" ")
-            outQuoted(file,key)
-            out(file,":")
-            ppJson(file,obj[key],level+1+len(key)+3) # largeur de [{" de la clé
-            if i<n: out(file,",")
-            i+=1
-        out(file,"}")
-    elif type(obj) is list:
-        out(file,"[")
-        n=len(obj)
-        i=1
-        for elem in obj:
-            if i>1: out(file,"\n"+(level+1)*" ")
-            ppJson(file,elem,level+1)
-            if i<n: out(file,",")
-            i+=1
-        out(file,"]")
-    if level==0:out(file,"\n")
-
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description="Parse a JSON-rnc schema from a file or from stdin if no file is given. When there is no error in the schema, produce a JSON Schema on stdout")

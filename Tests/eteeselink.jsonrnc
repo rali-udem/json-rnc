@@ -1,7 +1,7 @@
 ## adaptation of the "contrived example" of relax-json given at
 ##     https://github.com/eteeselink/relax-json
 
-start = [(BookList | Store)]
+start = [BookList | Store]
 
 BookList = { books: [ Book ], owner: string }
 
@@ -14,4 +14,4 @@ Book = {
 
 Store = { name: string, url: string }
 
-BookType = (/Paperback/ | /Hardcover/)
+BookType = /Paperback/ | /Hardcover/

@@ -16,7 +16,8 @@ import re,pprint,json,os,datetime,argparse
 ## flag for debugging
 traceRead=False
 
-from ParseJsonRnc       import parseJsonRnc,ppJson
+from ppJson             import ppJson
+from ParseJsonRnc       import parseJsonRnc
 from SplitJson          import jsonSplitter
 from ValidateJsonObject import validateObject,errorSchema,printErrorStatistics,printErrorIdList,showNum
 
@@ -54,6 +55,7 @@ def validateStream(schema,idStr,stream,logMessages):
     nbInvalid=0
     nbBad=0
     nbDup=0
+    allIds=dict()
     for inJson in stream:
         try:
             if traceRead:print "$$$inJson="+inJson
@@ -63,6 +65,10 @@ def validateStream(schema,idStr,stream,logMessages):
             if idFn!=None:
                 val=idFn(obj)
                 if val!=None:
+                    if val in allIds:  # check for duplicate id
+                        print "record %d :duplicate id:%s already used for record no %d"%(nb,val,allIds[val])
+                    else:
+                        allIds[val]=nb
                     id=val
             if not(validateObject(obj,id,schema,logMessages)):
                 nbInvalid+=1

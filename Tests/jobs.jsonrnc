@@ -16,8 +16,8 @@ job = {
     profile?:chaine10,
     ref?:string,
     company_desc?:chaine10,
-    publication_date:string,
-    contract_type:string,
-    industry:string,
-    contact:string
+    publication_date?:string,
+    contract_type?:string,
+    industry?:string,
+    contact?:string
 }

@@ -1,3 +1,5 @@
-[{"name":"Guy","id":"Lapalme","address":45, "postalCode":"H0H 0H0"},
-{"id":{"no":24},"name":"Luc","address":75},
-{"id":true,"address":10,"name":null}]
+[
+ {"name":"Guy","id":"Lapalme","address":45, "postalCode":"H0H 0H0","nombreOuChaineVide":45.8},
+ {"id":{"no":24},"name":"Luc","address":75,"nombreOuChaineVide":""},
+ {"id":true,"address":10,"name":null}
+]
