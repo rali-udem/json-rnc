@@ -6,7 +6,7 @@
 ########################################################################
 
 
-import sys,re,json,codecs,datetime,argparse
+import sys,re,json,codecs,datetime,argparse,os
 from ppJson             import ppJson
 
 ## flags for debugging
@@ -407,8 +407,14 @@ if __name__ == '__main__':
     args=parser.parse_args()
     if args.debug : traceParse=True
     pythonSchemaFileName="standard input" if args.jsonrnc_file==None else args.jsonrnc_file
-    schema=parseJsonRnc(codecs.getreader('utf8')(sys.stdin) if pythonSchemaFileName=="standard input"\
-                                                            else open(args.jsonrnc_file))
+    if pythonSchemaFileName=="standard input" :
+        schema=parseJsonRnc(codecs.getreader('utf8')(sys.stdin))
+    else:
+        if not os.path.exists(pythonSchemaFileName):
+            print "schema file not found: "+pythonSchemaFileName
+            exit(1)
+        else:
+            schema=parseJsonRnc(open(pythonSchemaFileName))
     if type(schema) is int:
         print str(schema)+" errors found in schema in "+pythonSchemaFileName
     else:

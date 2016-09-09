@@ -128,6 +128,9 @@ def readSchema(pythonSchemaFileName):
 ## find a JSON-RNC schema: if the JSON Schema file is older than the JSON-RNC schema parse it
 def getSchema(jsonrncFile):
     if traceRead:print "getSchema:"+jsonrncFile
+    if not os.path.exists(pythonSchemaFileName):
+        print "schema file not found: "+jsonrncFile
+        return None
     pythonSchemaFileName=jsonrncFile+".json"
     if os.path.exists(pythonSchemaFileName):
         schemaCreationTime=modificationDate(pythonSchemaFileName)

@@ -26,8 +26,8 @@ def errorSchema(sels,mess,infos):
 def isString(value):
     return isinstance(value,(str,unicode))
 def showVal(value,width=50):
-    if value==True:val="true"
-    elif value==False:val="false"
+    if type(value) is bool:
+        val="true" if value else "false"
     elif value==None:val="null"
     else: val=str(value)
     return val if len(val)<width else val[0:width-13]+"..."+val[-10:]
@@ -47,7 +47,6 @@ def deref(selects,schema):
     else:
         raise NameError("could not find:"+field) 
 
-
 ### 
 #  validate object o according to a schema keeping track of selectors (sels)
 #  that are used to identify errors 
@@ -56,12 +55,14 @@ def validate(sels,schema,parent,o):
     global traceValidate
     if traceValidate: print "$$validate:%s:%s:%s"%("/".join(sels),showVal(schema),showVal(o))
     if "oneOf" in schema:
+        allMess=[]
         for alt in schema["oneOf"]:
             mess=validate(sels,alt,schema,o)
             # if traceValidate: print "$$$"+showVal(alt)+"=>"+mess
             if mess=="":
                 return ""
-        return mess # returns the last error message
+            allMess.append(mess)
+        return showVal(o)+" does not match any alternative:\n -"+" -".join(allMess) # returns combined error message
     if "type" in schema :
         theType=schema['type']
         if theType=="object":
@@ -115,8 +116,7 @@ def validateProperties(sels,props,required,parent,obj):
         if field in obj:
             newSels=list(sels) # ajuster la liste des sélecteurs
             newSels.append(field)
-            if field in obj:
-                valid+=validate(newSels,props[field],parent,obj[field])
+            valid+=validate(newSels,props[field],parent,obj[field])
         else:
             valid+=errorValidate(sels,"missing required field:"+field,"")
     # validate the other fields of the object
@@ -177,7 +177,7 @@ def validateFacets(sels,schema,value):
     if theType=="string":
         if isString(value):
             if "pattern" in schema:
-                regex="^"+schema["pattern"]+"$"   # do an "anchored match" of the regex
+                regex=schema["pattern"]
                 valid += "" if re.match(regex,value) \
                             else errorValidate(sels,"no match:",regex+"<>"+value)
             length=len(value)
@@ -214,19 +214,12 @@ def printErrorStatistics():
     for (mess,nb) in errors:
         print showNum(nb,15)+"\t"+mess
 
-# list of ids of erroneous objects
-errorIdList=[]
-def printErrorIdList():
-    global errorIdList
-    print ";".join([id+"p" for id in errorIdList])
-
 ## validate a single json object (json), identified by recordId (a string), according to a json schema
 def validateObject(obj,recordId, schema,logMessages):
-    global rootSchema,errorTable,errorIdList
+    global rootSchema,errorTable
     rootSchema=schema
     mess=validate([],schema,None,obj)
     if mess!="":
-        errorIdList.append(recordId)
         if logMessages:
             print recordId+":"+showVal(obj,100)+"\n"+mess,
         for messLine in mess.split("\n")[0:-1]: ## mess can contain more than one error message

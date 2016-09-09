@@ -28,7 +28,7 @@ The key does not need to be written within quotes if it is an *ordinary* identif
 Here are a few remarks about keys:
   - in a JSON object, all keys must be different (this is checked by the schema validator), and there is no ordering between properties within a single object;
   - all keys specified in the schema must appear in the object, unless they are marked as *optional* by appending a question mark (`?`) to the key ;
-  - the keys are always strings; they must be quoted in the JSON value but do not have to be quoted in the JSON-RNC schema if it only contains alphanumeric characters.
+  - the keys are always quoted strings in the JSON value; to simplify the JSON-RNC schema a key does not have to be quoted it only contains alphanumeric characters.
 -   a **list of types separated by a vertical bar** indicating that the object must match one of these types; for example `integer|{a:string}` will match either an integer or an object with a single key `a`.
 -   a **JSON array type** defined with a type or a list of types; all elements in the array will have to match this type; so `[{a:string, b:number}]` will match a list of objects each being composed of the same two key-value pairs.
 -   a **type within parentheses** for grouping, most often choices between alternatives.
@@ -197,20 +197,27 @@ We implemented the validation in Python in two steps.
 
     ./ValidateJsonRnc.py schema.jsonrnc f.json
 
-- If JSON objects are not on a single line, adding `-s` optional flag will split and merge them on a single line.
-- Objects that do not conform to the schema are usually identified by their line number in the file. If another field or sequence of fields could prove more useful as identification, it can be specified as the value for the `-id` optional flag. Its value is a list of keys each separated by a slash (e.g. `'_id/$oid'`) ([JSON Pointer][] notation). When the '-id' flag is given, the validator will check that this id is not repeated within the whole file.
+If no schema file is given it will process the standard input.
+
+*command line arguments*
+
+- *-s* or *--split* : if multiple JSON objects are on a single line or if a JSON spans multiple lines, the validator will split and merge them before validation.
+- *-id* : objects that do not conform to the schema are usually identified by their line number in the file. If another field or sequence of fields could prove more useful as identification, it can be specified as the value for the `-id` optional flag. Its value is a list of keys each separated by a slash (e.g. `'_id/$oid'`) ([JSON Pointer][] notation). When the '-id' flag is given, the validator will check that ids are not repeated within the whole file.
+- *-st* or *--stats* : at the end of execution, output the number of occurrences of each error message
+- *--nolog* : do not output the error messages, usually in conjunction with *-st*
+- *-sed* : output a list of erroneous line numbers in compatible format for use with the command "sed -n" to display the corresponding line
+- *-h* or *--help* : output usage of the validator command
 
 **Splitting and flattening of a JSON file** can be done with:
 
     ./SplitJson.py
 
-If the JSON file has objects spanning many lines of the input, its format can be reorganized with this filter that reads the standard input for JSON objects and outputs each JSON object on a single line. Newlines within strings are replaced with `\n` so that they are correctly read back.
+If the JSON file has objects spanning many lines of the input, its format can be reorganized with this filter that reads the standard input for JSON objects and outputs each JSON object on a single line. Newlines within strings are replaced with `\n` so that they are correctly read back. This is the process used by the *-s* command argument of the validator.
 
 **Parsing** the schema can be also done separately to produce on stdout a pretty-printed JSON file with the Python data structure using:
 
     ./ParseJsonRnc.py schema.jsonrnc
 
-If no schema file is given it will process the standard input.
 
 # 6. Installation
 
