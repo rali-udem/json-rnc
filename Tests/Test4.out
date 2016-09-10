@@ -1,0 +1,10 @@
+1:[{u'postalCode': u'H0H 0H0', u'nombreOuChaineVide': 45.8, u'address': 45, u'name': u'Gu...ess': 10}]
+[2]/name	string expected:	null
+true does not match any alternative:
+ -[2]/id	string expected:	true
+ -[2]/id	object expected:	true
+[2]/address	illegal value:	10 <= 10 excl
+1 objects read: 1 invalid, 0 bad, 0 with duplicate fields
+Error Statistics
+              1	[2]/name:string expected:
+              1	true does not match any alternative:

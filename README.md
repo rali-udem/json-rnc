@@ -30,10 +30,10 @@ Here are a few remarks about keys:
   - all keys specified in the schema must appear in the object, unless they are marked as *optional* by appending a question mark (`?`) to the key ;
   - the keys are always quoted strings in the JSON value; to simplify the JSON-RNC schema a key does not have to be quoted it only contains alphanumeric characters.
 -   a **list of types separated by a vertical bar** indicating that the object must match one of these types; for example `integer|{a:string}` will match either an integer or an object with a single key `a`.
--   a **JSON array type** defined with a type or a list of types; all elements in the array will have to match this type; so `[{a:string, b:number}]` will match a list of objects each being composed of the same two key-value pairs.
+-   a **JSON array type** defined with a type or a list of types; all elements in the array will have to match this type; so `[{a:string, b:number}]` will match a list of objects each being composed of the same two key-value pairs. An empty array (`[]`) will also match this expression.
 -   a **type within parentheses** for grouping, most often choices between alternatives.
 -   an **identifier** which should refer to an existing type definition; forward references are accepted but all references must have been defined at the end of the JSON-RNC file.
--   although it defeats the purpose of a validator, we found it useful to allow to skip the validation of an object or an array by indicating an empty object (`{}`) or an empty array (`[]`).
+-   although it defeats the purpose of a validator, we found it useful to allow to skip the validation of an object or an array by indicating an empty object (`{}`) or an empty array (`[]`). To explicitly match an empty array, use `[]@(maxItems=0)`. To match an empty object, use `{}@(maxProperties=0)`.
 
 
 A simple type can be followed by a *facets* as they are called in [XML Schema][] which define constraints on the value of the type. Facets are called validation keywords in [JSON-Schema][]. Facets are defined with list of pairs of validation keywords followed by an equal sign and a value. All facets are written within parentheses preceded by the at-sign (`@`). The currently implemented facets are:
@@ -42,6 +42,8 @@ A simple type can be followed by a *facets* as they are called in [XML Schema][]
 -   `minLength`, `maxLength` specifies the minimum (resp. maximum) length of the string value.
 -   `minimum`, `maximum` specifies the minimum (resp. maximum) value a numeric value can take.
 -   `minimumExclusive`, `maximumExclusive` is a boolean (`true` or `false`) that indicates whether the allowed value includes the specified minimum (resp. maximum)
+-   `minItems`,`maxItems` specifies the minimum (resp. maximum) number of elements in the array
+-   `minProperties`,`maxProperties` specifies the minimum (resp. maximum) number of properties in the object
 
 ### 2.1 EBNF specification of JSON-RNC
 
@@ -62,7 +64,9 @@ This specification of JSON-RNC definitions is formalized the following [EBNF gra
     property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
     facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
     facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
-                  | "pattern" | "minLength" | "maxLength" ;                         (* for strings *)
+                  | "pattern" | "minLength" | "maxLength"                           (* for strings *)
+                  | "minItems" | "maxItems"                                         (* for arrays *)
+                  | "minProperties" | "maxProperties";                              (* for objects *)
 
     identifier  = letter , { letter | digit | "_" } ;
     number      = [ "-" ], digit, { digit } ["." , digit, { digit }];

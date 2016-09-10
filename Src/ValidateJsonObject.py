@@ -58,35 +58,55 @@ def validate(sels,schema,parent,o):
         allMess=[]
         for alt in schema["oneOf"]:
             mess=validate(sels,alt,schema,o)
-            # if traceValidate: print "$$$"+showVal(alt)+"=>"+mess
+            if traceValidate: print "$$$"+showVal(alt)+"=>"+mess
             if mess=="":
                 return ""
             allMess.append(mess)
         return showVal(o)+" does not match any alternative:\n -"+" -".join(allMess) # returns combined error message
     if "type" in schema :
         theType=schema['type']
-        if theType=="object":
-            if 'properties' in schema:
-                if "required" in schema:
-                    return validateProperties(sels,schema['properties'],schema['required'],schema,o)
-                else:
-                    return errorSchema(sels,"'required' field not in schema","")
-            else:
-                return "" # no validation when there is no property field
         if theType in ["integer","number","boolean","string","boolean","null"]:
             valid=validateSimpleType(sels,theType,o)
             if valid!="": return valid
             return validateFacets(sels,schema,o)
+        if theType=="object":
+            if type(o) is dict:
+                # check length of object
+                nbProps=len(o)
+                valid=""
+                # print "nbProps:%d,%d,%d"%(nbProps,schema["minProperties"],schema["maxProperties"])
+                if "minProperties" in schema:
+                    if nbProps<schema["minProperties"]:
+                        valid+=errorValidate(sels,"object length less than "+str(schema["minProperties"]),showVal(o))
+                if "maxProperties" in schema:
+                    if nbProps>schema["maxProperties"]:
+                        valid+=errorValidate(sels,"object length greater than "+str(schema["maxProperties"]),showVal(o))
+                # check properties
+                if 'properties' in schema:
+                    if "required" in schema:
+                        return validateProperties(sels,schema['properties'],schema['required'],schema,o)
+                    else:
+                        return errorSchema(sels,"'required' field not in schema","")
+                else:
+                    return valid # no property validation when there is no property field
+            else:
+                return errorValidate(sels,"object expected:",showVal(o))
         if theType =="array":
             if type(o) is list:
-                if 'items' in schema:
+                if 'items' in schema: 
                     schemaItems=schema['items']
                     valid=""
                     newSels=list(sels)
                     no=0
-                    for elem in o:
+                    for elem in o: #check each element of the array
                         valid+=validate(newSels+["["+str(no)+"]"],schemaItems,[],elem)
                         no+=1
+                    if "minItems" in schema:
+                        if no<schema["minItems"]:
+                            valid+=errorValidate(newSels,"array length less than "+str(schema["minItems"]),showVal(o))
+                    if "maxItems" in schema:
+                        if no>schema["maxItems"]:
+                            valid+=errorValidate(newSels,"array length greater than "+str(schema["maxItems"]),showVal(o))
                     return valid
                 else:
                     return "" # no validation when no item is defined...
@@ -162,14 +182,14 @@ def validateFacets(sels,schema,value):
                 low=schema["minimum"]
                 if "exclusiveMinimum" in schema and schema["exclusiveMinimum"]:
                    if value <= low : 
-                       valid+=errorValidate(sels,"illegal value:",str(value)+" <= "+ str(low))
+                       valid+=errorValidate(sels,"illegal value:",str(value)+" <= "+ str(low)+" excl")
                 elif value < low :
                        valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(low))
             if "maximum" in schema:
                 high=schema["maximum"]
                 if "exclusiveMaximum" in schema and schema["exclusiveMaximum"]:
                    if value >= high : 
-                       valid+=errorValidate(sels,"illegal value:",str(value)+" >= "+ str(high))
+                       valid+=errorValidate(sels,"illegal value:",str(value)+" >= "+ str(high)+" excl")
                 elif value > high :
                    valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(high))
         else:
@@ -177,7 +197,7 @@ def validateFacets(sels,schema,value):
     if theType=="string":
         if isString(value):
             if "pattern" in schema:
-                regex=schema["pattern"]
+                regex="^"+schema["pattern"]+"$"   # do an "anchored match" of the regex
                 valid += "" if re.match(regex,value) \
                             else errorValidate(sels,"no match:",regex+"<>"+value)
             length=len(value)
@@ -209,17 +229,26 @@ def showNum(n,width=0):
 errorTable={}
 def printErrorStatistics():
     global errorTable
+    if len(errorTable)==0:return
     errors=sorted(errorTable.items(),key=lambda i:i[1],reverse=True)
     print "Error Statistics"
     for (mess,nb) in errors:
         print showNum(nb,15)+"\t"+mess
 
+# list of ids of erroneous objects
+errorIdList=[]
+def printErrorIdList():
+    global errorIdList
+    print ";".join([id+"p" for id in errorIdList])
+
 ## validate a single json object (json), identified by recordId (a string), according to a json schema
-def validateObject(obj,recordId, schema,logMessages):
-    global rootSchema,errorTable
+def validateObject(obj,recordId, schema,logMessages,traceRead):
+    global rootSchema,errorTable, errorIdList,traceValidate
     rootSchema=schema
+    traceValidate=traceRead
     mess=validate([],schema,None,obj)
     if mess!="":
+        errorIdList.append(recordId)
         if logMessages:
             print recordId+":"+showVal(obj,100)+"\n"+mess,
         for messLine in mess.split("\n")[0:-1]: ## mess can contain more than one error message
@@ -228,5 +257,7 @@ def validateObject(obj,recordId, schema,logMessages):
                 errorTable[messType]+=1
             else: 
                 errorTable[messType]=1
+            if re.search("does not match any alternative",messLine):
+                break # stats for only the first line of alternative errors 
         return False
     return True

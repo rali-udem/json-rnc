@@ -1,0 +1,15 @@
+3:{u'code': u'allo', u'phoneNumber': [{u'code': 345, u'location': u'home'}, {u'code': Fal...\xe9bec'}}
+phoneNumber/[1]/code	integer expected:	false
+4:{}
+	missing required field:address	
+	missing required field:phoneNumber	
+5:[345]
+	object expected:	[345]
+6:bonjour
+	object expected:	bonjour
+7 objects read: 4 invalid, 0 bad, 0 with duplicate fields
+Error Statistics
+              2	:object expected:
+              1	:missing required field:address
+              1	phoneNumber/[1]/code:integer expected:
+              1	:missing required field:phoneNumber

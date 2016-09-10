@@ -1,0 +1,10 @@
+3:{u'id': True, u'name': None, u'address': 3}
+name	string expected:	null
+true does not match any alternative:
+ -id	string expected:	true
+ -id	object expected:	true
+address	illegal value:	3 < 10
+3 objects read: 1 invalid, 0 bad, 0 with duplicate fields
+Error Statistics
+              1	name:string expected:
+              1	true does not match any alternative:

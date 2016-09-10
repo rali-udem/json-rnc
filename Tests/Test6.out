@@ -1,0 +1,32 @@
+3:{u'bonjour': 3}
+{u'bonjour': 3} does not match any alternative:
+ -	integer expected:	{u'bonjour': 3}
+ -	null expected:	{u'bonjour': 3}
+ -	object length less than 8	{u'bonjour': 3}
+	object length greater than 0	{u'bonjour': 3}
+ -	array expected:	{u'bonjour': 3}
+5:[]
+[] does not match any alternative:
+ -	integer expected:	[]
+ -	null expected:	[]
+ -	object expected:	[]
+ -	array length less than 1	[]
+6:[3, 4, 5]
+[3, 4, 5] does not match any alternative:
+ -	integer expected:	[3, 4, 5]
+ -	null expected:	[3, 4, 5]
+ -	object expected:	[3, 4, 5]
+ -	array length greater than 2	[3, 4, 5]
+7:{u'a': 1, u'c': 3, u'b': 2, u'e': 5, u'd': 4, u'g': 7, u'f': 6, u'i': 9, u'h': 8, u'j': 10}
+{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10} does not match any alternative:
+ -	integer expected:	{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10}
+ -	null expected:	{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10}
+ -	object length greater than 0	{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10}
+ -	array expected:	{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10}
+Item 8:duplicate key: a
+8 objects read: 4 invalid, 0 bad, 1 with duplicate fields
+Error Statistics
+              1	{u'bonjour': 3} does not match any alternative:
+              1	[] does not match any alternative:
+              1	[3, 4, 5] does not match any alternative:
+              1	{u'a': 1, u'c': 3, u'b': 2, u'e': 5, ... u'j': 10} does not match any alternative:

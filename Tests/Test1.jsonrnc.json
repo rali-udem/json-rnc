@@ -1,49 +1,16 @@
-{
-   "definitions": {
-      "person": {
-         "required": [
-            "name",
-            "id",
-            "address"
-         ],
-         "type": "object",
-         "properties": {
-            "postalCode": {
-               "$ref": "#/definitions/cpRE"
-            },
-            "address": {
-               "minimum": 10,
-               "type": "number",
-               "maximum": 100
-            },
-            "name": {
-               "type": "string"
-            },
-            "id": {
-               "oneOf": [
-                  {
-                     "type": "string"
-                  },
-                  {
-                     "required": [
-                        "no"
-                     ],
-                     "type": "object",
-                     "properties": {
-                        "no": {
-                           "type": "number"
-                        }
-                     }
-                  }
-               ]
-            }
-         }
-      },
-      "cpRE": {
-         "pattern": "[A-Z][0-9][A-Z] [0-9][A-Z][0-9]",
-         "type": "string"
-      }
-   },
-   "$schema": "http://json-schema.org/draft-04/schema#",
-   "$ref": "#/definitions/person"
-}
+{"$ref":"#/definitions/person",
+ "$schema":"http://json-schema.org/draft-04/schema#",
+ "definitions":{"cpRE":{"pattern":"[A-Z][0-9][A-Z] [0-9][A-Z][0-9]",
+                        "type":"string"},
+                "person":{"properties":{"address":{"maximum":100,
+                                                   "minimum":10,
+                                                   "type":"number"},
+                                        "id":{"oneOf":[{"type":"string"},
+                                                       {"properties":{"no":{"type":"number"}},
+                                                        "required":["no"],
+                                                        "type":"object"}]},
+                                        "name":{"type":"string"},
+                                        "postalCode":{"$ref":"#/definitions/cpRE"}},
+                          "required":["name","id","address"],
+                          "type":"object"},
+                "start":{"$ref":"#/definitions/person"}}}

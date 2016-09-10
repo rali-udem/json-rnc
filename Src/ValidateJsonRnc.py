@@ -70,7 +70,7 @@ def validateStream(schema,idStr,stream,logMessages):
                     else:
                         allIds[val]=nb
                     id=val
-            if not(validateObject(obj,id,schema,logMessages)):
+            if not(validateObject(obj,id,schema,logMessages,traceRead)):
                 nbInvalid+=1
             if not(logMessages) and nb%10000==0:
                 sys.stderr.write("Processing record "+str(nb)+"\n")
@@ -94,7 +94,13 @@ def validateStream(schema,idStr,stream,logMessages):
 #   returns the number of invalid objects
 def validateObjects(schema,idStr,fileName,logMessages):
     if traceRead:print "validateObjects(%s,%s)"%(schema,fileName)
-    return validateStream(schema,idStr,jsonSplitter((open(fileName) if fileName!=None else sys.stdin).read()),logMessages)
+    if fileName==None:
+        return validateStream(schema,idStr,jsonSplitter(sys.stdin.read()),logMessages)
+    else:
+        if not os.path.exists(fileName):
+            print "json file not found: "+fileName
+            return 1
+        return validateStream(schema,idStr,jsonSplitter(open(fileName).read()),logMessages)
 
 ### 
 #  validate lines in a file each of which is json object
@@ -128,7 +134,7 @@ def readSchema(pythonSchemaFileName):
 ## find a JSON-RNC schema: if the JSON Schema file is older than the JSON-RNC schema parse it
 def getSchema(jsonrncFile):
     if traceRead:print "getSchema:"+jsonrncFile
-    if not os.path.exists(pythonSchemaFileName):
+    if not os.path.exists(jsonrncFile):
         print "schema file not found: "+jsonrncFile
         return None
     pythonSchemaFileName=jsonrncFile+".json"
@@ -156,7 +162,8 @@ if __name__ == '__main__':
     parser.add_argument("schema",help="name of file containing the schema")
     parser.add_argument("json_file",help="name of the JSON file to validate",nargs='?')
     args=parser.parse_args()
-    if args.debug : traceRead=True
+    if args.debug : 
+        traceRead=True
     schema = getSchema(args.schema)
     if schema!=None:
         if args.split:

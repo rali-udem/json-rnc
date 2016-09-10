@@ -1,0 +1,1 @@
+start = integer|null|{}@(maxProperties=0,minProperties=8)|[integer]@(maxItems=2,minItems=1)

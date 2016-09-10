@@ -94,7 +94,9 @@ class Token:
 # property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
 # facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
-#               | "pattern" | "minLength" | "maxLength" ;                         (* for strings *)
+#               | "pattern" | "minLength" | "maxLength"                           (* for strings *)
+#               | "minItems" | "maxItems"                                         (* for arrays *)
+#               | "minProperties" | "maxProperties";                              (* for objects *)
 #
 # identifier  = letter , { letter | digit | "_" } | string ;
 # number      = [ "-" ], digit, { digit } ["." , digit, { digit }];
@@ -181,7 +183,7 @@ def parseTypes(): ## =>
 ##                | "/", character-"/" , "/"                               (* regular expression without a slash *)
 ##               ) , [facets]
 ##               | "{" , [properties] , "}"                                (* object *)
-##               | "[" , [type]  , "]"                                     (* array *)
+##               | "[" , [types]  , "]"                                     (* array *)
 ##               | "(" , types   , ")" ;                                   (* grouping *)
 def parseType():
     global token,tokenizer,traceParse,refs
@@ -210,11 +212,13 @@ def parseType():
         if token.kind == "CLOSE_BRACE": # skip object validation on {}
             token=tokenizer.next()
             res={"type":"object"}
+            res=checkFacets(res)
         else:
             (props,required)=mergeProps(parseProps())
             res = {"type":"object","properties":props,"required":required}
             if token.kind == "CLOSE_BRACE":
                 token=tokenizer.next()
+                res=checkFacets(res)
             else:
                 errorJsrnc("parseType","closing brace expected",["CLOSE_BRACE"])
     elif token.kind == "OPEN_BRACKET":
@@ -222,10 +226,12 @@ def parseType():
         if token.kind == "CLOSE_BRACKET": ## skip array validation on []
             token=tokenizer.next()
             res={"type":"array"}
+            res=checkFacets(res)
         else:
             res = {"type":"array","items":parseTypes()}
             if token.kind == "CLOSE_BRACKET":
                 token=tokenizer.next()
+                res=checkFacets(res)
             else:
                 errorJsrnc("parseType","closing bracket expected",["CLOSE_BRACKET"])
     elif token.kind == "OPEN_PAREN":
@@ -311,7 +317,8 @@ def checkFacets(res):
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
 # facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
 #               | "pattern" | "minLength" | "maxLength" ;                         (* for strings *)
-# TODO: add other facets...
+#               | "minItems" | "maxItems"                                         (* for arrays *)
+#               | "minProperties" | "maxProperties";                              (* for objects *)
 def parseFacets(theType):
     global token, tokenizer, traceParse
     if traceParse:print "<<parseFacets:"+str(token)
@@ -362,6 +369,21 @@ def parseFacets(theType):
                             errorJsrnc("parseFacets","boolean value expected for facet "+ident,["STR"]) 
                     else: 
                         errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
+                elif ident in ["minItems","maxItems","minProperties","maxProperties"]:
+                    token=tokenizer.next()
+                    if token.kind == "EQUAL":
+                        token=tokenizer.next()
+                        if token.kind == "NUMBER":
+                            facets.append({ident:int(token.value)})
+                            token=tokenizer.next()
+                            if theType!= None and ident in ["minItems","maxItems"] and theType != "array":
+                                errorJsrnc("parseFacets","facet "+ident+" only applicable to array types",None)
+                            if theType!= None and ident in ["minProperties","maxProperties"] and theType != "object":
+                                errorJsrnc("parseFacets","facet "+ident+" only applicable to object types",None)
+                        else: 
+                            errorJsrnc("parseFacets","number expected in facet "+ident,["NUMBER"])
+                    else: 
+                        errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
                 else: 
                     errorJsrnc("parseFacets","unrecognized facet:"+token.value,["IDENT","STR"])
                     break
@@ -373,6 +395,7 @@ def parseFacets(theType):
         token=tokenizer.next() # skip closing parenthesis
     else: 
         errorJsrnc("parseFacets","open parenthesis expected at the start of a facet",["IDENT","STR"])
+    #todo: check that min{inum|Length|Items|Properties} are <= than the corresponding max...
     if traceParse:print ">>parseFacets:"+str(facets)
     return facets
 
