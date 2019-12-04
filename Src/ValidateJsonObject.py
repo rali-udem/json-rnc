@@ -114,14 +114,14 @@ def validate(sels,schema,parent,o):
                 return errorValidate(sels,"array expected:",showVal(o))
         else:
             return errorSchema(sels,"unexpected type:",str(theType))
-    if "$ref" in schema: # hack qui remplace dans le schéma la référence au type par sa définition
+    if "$ref" in schema: # hack replace in the schema the type reference by its definition 
         try:
             typeref=schema["$ref"]
             newType=deref(typeref.split("/"),parent)
             schema.update(newType)
             del schema["$ref"]
             return validate(sels+["("+typeref+")"],schema,parent,o)
-        except NameError as err: # ici si on ne peut déréfencer...
+        except NameError as err: # we could not dereference...
             return str(err)+" in "+typeref
     return errorSchema(sels,"Schema without type, nor $ref:",showVal(schema))
 
@@ -131,10 +131,17 @@ def validateProperties(sels,props,required,parent,obj):
     valid=""
     if not(type(obj) is dict):
         return errorValidate(sels,"object expected:",showVal(obj))
+    if required == ["*"]:
+        # validate only values, not field names
+        for field in iter(obj):
+            newSels=list(sels)
+            newSels.append(field)
+            valid+=validate(newSels,props["*"],parent,obj[field])
+        return valid
     # validate required fields
     for field in required:
         if field in obj:
-            newSels=list(sels) # ajuster la liste des sélecteurs
+            newSels=list(sels) # update selector list
             newSels.append(field)
             valid+=validate(newSels,props[field],parent,obj[field])
         else:

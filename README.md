@@ -28,7 +28,8 @@ The key does not need to be written within quotes if it is an *ordinary* identif
 Here are a few remarks about keys:
   - in a JSON object, all keys must be different (this is checked by the schema validator), and there is no ordering between properties within a single object;
   - all keys specified in the schema must appear in the object, unless they are marked as *optional* by appending a question mark (`?`) to the key ;
-  - the keys are always quoted strings in the JSON value; to simplify the JSON-RNC schema a key does not have to be quoted it only contains alphanumeric characters.
+  - the keys are always quoted strings in the JSON value; to simplify the JSON-RNC schema a key does not have to be quoted it only contains alphanumeric characters;
+  - if the key field contains a single `*`, then the key values can be arbitrary but they still all be different; this is useful when a object is used a *dictionary* in which words are all different, but with a similar information definition. 
 -   a **list of types separated by a vertical bar** indicating that the object must match one of these types; for example `integer|{a:string}` will match either an integer or an object with a single key `a`.
 -   a **JSON array type** defined with a type or a list of types; all elements in the array will have to match this type; so `[{a:string, b:number}]` will match a list of objects each being composed of the same two key-value pairs. An empty array (`[]`) will also match this expression.
 -   a **type within parentheses** for grouping, most often choices between alternatives.
@@ -61,7 +62,7 @@ This specification of JSON-RNC definitions is formalized the following [EBNF gra
                   | "[" , [type]  , "]"                                     (* array *) 
                   | "(" , types   , ")" ;                                   (* grouping *) 
     properties  = property , {(",") , property} ;
-    property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
+    property    = (identifier , ["?"] , ":" , type | "*")  | "(" , properties , ")" ;
     facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
     facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
                   | "pattern" | "minLength" | "maxLength"                           (* for strings *)

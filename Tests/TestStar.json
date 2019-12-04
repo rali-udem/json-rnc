@@ -1,0 +1,13 @@
+{
+    "]":{"Pc":{"compl":"[",
+               "tab":["pc6"]}},
+    "a":{"D":{"tab":["d1"]}},
+    "A-bomb":{"N":{"tab":["n1"]}},
+    "A-level":{"N":{"tab":["n1"]}},
+    "aback":{"Adv":{"tab":["b1"]}},
+    "abacus":{"N":{"tab":["n2"]}},
+    "abaft":{"Adv":{"tab":["b1"]},
+             "P":{"tab":["pp"]}},
+    "abandon":{"N":{"tab":["n5"]},
+               "V":{"tab":"v1"}}
+}

@@ -36,6 +36,7 @@ def tokenizeRNC(input):
         ("CLOSE_PAREN",   r'\)'),
         ("VERT_BAR",      r'\|'),
         ("EQUAL",         r'='),
+        ("STAR",          r'\*'),
         ("AT",            r'@'),
         ("COMMA",         r','),
         ("COLON",         r':'),
@@ -91,7 +92,7 @@ class Token:
 #               | "[" , [types]  , "]"                                     (* array *)
 #               | "(" , types   , ")" ;                                   (* grouping *)
 # properties  = property , {[","] , property} ;
-# property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
+# property    = (identifier , ["?"] | *) , ":" , type  | "(" , properties , ")" ;
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
 # facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
 #               | "pattern" | "minLength" | "maxLength"                           (* for strings *)
@@ -276,13 +277,13 @@ def parseProps(): ## => [{id:"nom",type:...,(optional:True)?}]
     if traceParse:print ">>parseProps:"+str(res)
     return res
 
-# property    = identifier , ["?"] , ":" , type  | "(" , properties , ")" ;
-def parseProp(): ## => ({ident:type},optionel[boolean]) | None
+# property    = (identifier , ["?"] , ":" , type| "*")  | "(" , properties , ")" ;
+def parseProp(): ## => ({ident:type},optional[boolean]) | None
     global token, tokenizer,traceParse,refs
     if traceParse:print "<<parseProp:"+str(token)
     res=None
-    if token.kind in ["IDENT","STR"]:
-        ident=token.value if token.kind=="IDENT" else token.value[1:-1]
+    if token.kind in ["IDENT","STR","STAR"]:
+        ident=token.value if token.kind in ["IDENT","STAR"] else token.value[1:-1]
         token=tokenizer.next()
         optional=False
         parsedType=None
