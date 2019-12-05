@@ -11,6 +11,12 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 import json
 
+## to sort object fields without accents
+import unicodedata
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str.decode("utf-8"))
+    return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
 #### prettyprint a JSON in more compact format
 ##   that I find more readable
 
@@ -33,7 +39,7 @@ def ppJson(file,obj,level=0):
         out(file,"{")
         n=len(obj)
         i=1
-        for key in sorted(obj):
+        for key in sorted(obj,key=remove_accents):
             if i>1 : out(file,"\n"+(level+1)*" ")
             outQuoted(file,key)
             out(file,":")

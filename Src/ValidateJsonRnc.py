@@ -83,7 +83,10 @@ def validateStream(schema,idStr,stream,logMessages):
                 print "Item "+str(nb)+":"+mess.args[0]
             nbDup+=1
     if nbInvalid==0 and nbBad==0 and nbDup==0:
-        print "All "+showNum(nb)+" objects are valid"
+        if nb==1:
+            print "The object is valid"
+        else:
+            print "The "+showNum(nb)+" objects are valid"
     else:
         print showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad, " + showNum(nbDup)+ " with duplicate fields"
     return nbInvalid
