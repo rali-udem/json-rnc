@@ -36,7 +36,7 @@ def showVal(value,width=50):
 #   this function makes use of the global schema
 def deref(selects,schema):
     global traceValidate,rootSchema
-    # if traceValidate: print "$$deref(%s,%s)"%(str(selects),showVal(sch))
+    if traceValidate: print "$$deref(%s,%s)"%(str(selects),showVal(schema))
     if len(selects)==0:
         return schema
     field=selects[0]
@@ -82,13 +82,21 @@ def validate(sels,schema,parent,o):
                     if nbProps>schema["maxProperties"]:
                         valid+=errorValidate(sels,"object length greater than "+str(schema["maxProperties"]),showVal(o))
                 # check properties
-                if 'properties' in schema:
+                if "additionalProperties" in schema and type(schema["additionalProperties"]) is not bool:
+                    # validate only values, not field names
+                    valid=""
+                    for field in iter(o):
+                        newSels=list(sels)
+                        newSels.append(field)
+                        valid+=validate(newSels,schema["additionalProperties"],parent,o[field])
+                    return valid
+                elif 'properties' in schema:
                     if "required" in schema:
                         return validateProperties(sels,schema['properties'],schema['required'],schema,o)
                     else:
                         return errorSchema(sels,"'required' field not in schema","")
                 else:
-                    return valid # no property validation when there is no property field
+                    return valid # no property validation when there is no 'properties' field
             else:
                 return errorValidate(sels,"object expected:",showVal(o))
         if theType =="array":
@@ -123,7 +131,7 @@ def validate(sels,schema,parent,o):
             return validate(sels+["("+typeref+")"],schema,parent,o)
         except NameError as err: # we could not dereference...
             return str(err)+" in "+typeref
-    return errorSchema(sels,"Schema without type, nor $ref:",showVal(schema))
+    return errorSchema(sels,"Schema without type, oneOf nor $ref:",showVal(schema))
 
 def validateProperties(sels,props,required,parent,obj):
     global traceValidate
@@ -131,13 +139,6 @@ def validateProperties(sels,props,required,parent,obj):
     valid=""
     if not(type(obj) is dict):
         return errorValidate(sels,"object expected:",showVal(obj))
-    if required == ["*"]:
-        # validate only values, not field names
-        for field in iter(obj):
-            newSels=list(sels)
-            newSels.append(field)
-            valid+=validate(newSels,props["*"],parent,obj[field])
-        return valid
     # validate required fields
     for field in required:
         if field in obj:
@@ -187,18 +188,20 @@ def validateFacets(sels,schema,value):
         if isinstance(value,(int,float)):
             if "minimum" in schema:
                 low=schema["minimum"]
-                if "exclusiveMinimum" in schema and schema["exclusiveMinimum"]:
-                   if value <= low : 
-                       valid+=errorValidate(sels,"illegal value:",str(value)+" <= "+ str(low)+" excl")
-                elif value < low :
-                       valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(low))
+                if value < low :
+                    valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(low))
+            if "exclusiveMinimum" in schema:
+                low=schema["exclusiveMinimum"]
+                if value <= low : 
+                    valid+=errorValidate(sels,"illegal value:",str(value)+" <= "+ str(low)+" excl")
             if "maximum" in schema:
                 high=schema["maximum"]
-                if "exclusiveMaximum" in schema and schema["exclusiveMaximum"]:
-                   if value >= high : 
-                       valid+=errorValidate(sels,"illegal value:",str(value)+" >= "+ str(high)+" excl")
-                elif value > high :
-                   valid+=errorValidate(sels,"illegal value:",str(value)+" < "+str(high))
+                if value > high :
+                    valid+=errorValidate(sels,"illegal value:",str(value)+" > "+str(high))
+            if "exclusiveMaximum" in schema:
+                high=schema["exclusiveMaximum"]
+                if value >= high : 
+                   valid+=errorValidate(sels,"illegal value:",str(value)+" >= "+ str(high)+" excl")
         else:
             valid+=errorValidate(sels,"numeric value expected:",value)
     if theType=="string":

@@ -2,7 +2,7 @@
 start = [person]
 person = {name:string,
           id:(string|{no:number}),
-          address:number@(minimum=10,maximum=100,exclusiveMinimum=true),
+          address:number@(maximum=100,exclusiveMinimum=10),
           postalCode? : cpRE,
           nombreOuChaineVide?:(number|//)
 }

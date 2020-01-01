@@ -4,7 +4,7 @@ start = [person]
 tst = {a:b}
 person = {name:string,
           id:(string|{no:number,w:string}),
-          address:number@(minimum=10, maximum=100 exclusiveMinimum=true),
+          address:number@(maximum=100 exclusiveMinimum=10),
           postalCode? : [cpRE]
 }
 cpRE = /[A-Z][0-9][A-Z] [0-9][A-Z][0-9]/

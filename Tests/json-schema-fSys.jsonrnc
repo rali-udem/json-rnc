@@ -1,4 +1,6 @@
-## jsonrnc schema for the example given at http://json-schema.org/example2.html
+## jsonrnc schema for the example
+##   https://json-schema.org/learn/file-system.html
+
 start = {"/"?:infos,"/var"?:infos,"/tmp"?:infos,"/var/www"?:infos}
 
 infos = {storage:storageType,

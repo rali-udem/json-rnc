@@ -1,0 +1,7 @@
+{"familyName":"Bloggs",
+ "givenName":"Joe",
+ "url":"http://example.com",
+ "email":{"value":"bloggs@example.com","type":"work"},
+ "adr":{"locality":"New-York","region":"USA"},
+ "geo":{"latitude":40.7808,"longitude":-73.9772}
+}

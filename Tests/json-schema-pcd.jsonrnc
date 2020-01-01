@@ -1,0 +1,21 @@
+#  JSON based product catalog.
+# example taken from https://json-schema.org/learn/getting-started-step-by-step.html
+
+# A product from Acme's catalog
+start = {
+    productId:integer,                 # The unique identifier for a product
+    productName:string,                # Name of the product
+    price:number@(exclusiveMinimum=0), # The price of the product
+    tags?:[string]@(minItems=1),       # Tags for the product
+    dimensions?:{
+        length:number,
+        width:number,
+        height:number
+    },
+    warehouseLocation?:geo
+}
+# A geographical coordinate on a planet (most commonly Earth).
+geo = {
+    latitude:number@(minimum=-90,maximum=90),
+    longitude:number@(minimum=-180,maximum=180)
+}

@@ -1,8 +1,10 @@
 {"$ref":"#/definitions/job",
- "$schema":"http://json-schema.org/draft-04/schema#",
+ "$schema":"http://json-schema.org/draft-07/schema#",
  "definitions":{"chaine10":{"minLength":10,
                             "type":"string"},
-                "job":{"properties":{"_id":{"properties":{"$oid":{"type":"string"}},
+                "job":{"additionalProperties":false,
+                       "properties":{"_id":{"additionalProperties":false,
+                                            "properties":{"$oid":{"type":"string"}},
                                             "required":["$oid"],
                                             "type":"object"},
                                      "company_desc":{"$ref":"#/definitions/chaine10"},
@@ -22,5 +24,4 @@
                                      "url":{"$ref":"#/definitions/chaine10"},
                                      "url_secondary":{"$ref":"#/definitions/chaine10"}},
                        "required":["_id","job_id","date_update","description","title","url"],
-                       "type":"object"},
-                "start":{"$ref":"#/definitions/job"}}}
+                       "type":"object"}}}
