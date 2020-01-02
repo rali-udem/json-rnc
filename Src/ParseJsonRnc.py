@@ -334,6 +334,14 @@ def checkFacets(res):
             res.update(facet)
     return res
 
+# taken from https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int
+# if the string corresponds to a string then return it else return a float
+def num(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
 # facetId     = "minimum" | "exclusiveMinimum" | "maximum" | "exclusiveMaximum"   (* for numbers *)
 #               | "pattern" | "minLength" | "maxLength" ;                         (* for strings *)
@@ -353,7 +361,7 @@ def parseFacets(theType):
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
                         if token.kind == "NUMBER":
-                            facets.append({ident:float(token.value)})
+                            facets.append({ident:num(token.value)})
                             token=tokenizer.next()
                             if theType!= None and ident in ["minimum","maximum"] and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
@@ -379,7 +387,7 @@ def parseFacets(theType):
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
                         if token.kind=="NUMBER":
-                            facets.append({ident:float(token.value)})
+                            facets.append({ident:num(token.value)})
                             token=tokenizer.next()
                             if theType!= None and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);

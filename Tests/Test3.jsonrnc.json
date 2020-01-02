@@ -8,7 +8,7 @@
                                                        "type":"object"},
                                          "id":{"type":"integer"},
                                          "name":{"type":"string"},
-                                         "price":{"exclusiveMinimum":0.0,
+                                         "price":{"exclusiveMinimum":0,
                                                   "type":"number"},
                                          "tags":{"items":{"type":"string"},
                                                  "type":"array"},

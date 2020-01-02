@@ -3,7 +3,7 @@
 true does not match any alternative:
  -[2]/id	string expected:	true
  -[2]/id	object expected:	true
-[2]/address	illegal value:	10 <= 10.0 excl
+[2]/address	illegal value:	10 <= 10 excl
 1 objects read: 1 invalid, 0 bad, 0 with duplicate fields
 Error Statistics
               1	[2]/name:string expected:
