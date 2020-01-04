@@ -31,7 +31,7 @@ def tokenizeRNC(input):
         ("STR",           r'"(?:\\.|[^"\\])*?"'+"|"+ r"'(?:\\.|[^'\\])*?'"),# double or single quoted string
         ("REGEX",         r"/.*?/"),                    # regex
         ("NUMBER",        r'-?\d+(\.\d*)?'),              # integer or decimal number
-        ("IDENT",         r'[A-Za-z_][A-Za-z_0-9]*'),   # Identifiers
+        ("IDENT",         r'[A-Za-z_][-A-Za-z_0-9]*'),   # Identifiers
         ("INTERROGATION", r'\?'),
         ("OPEN_BRACE",    r'\{'),
         ("CLOSE_BRACE",   r'\}'),

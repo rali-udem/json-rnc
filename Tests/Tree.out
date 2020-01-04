@@ -1,0 +1,15 @@
+10:{u'a': 23, u'b': [1, True]}
+{u'a': 23, u'b': [1, True]} does not match any alternative:
+ -	array expected:	{u'a': 23, u'b': [1, True]}
+ -	object length greater than 1	{u'a': 23, u'b': [1, True]}
+ -{u'a': 23, u'b': [1, True]} does not match any alternative:
+ -	string expected:	{u'a': 23, u'b': [1, True]}
+ -	integer expected:	{u'a': 23, u'b': [1, True]}
+ -	number expected:	{u'a': 23, u'b': [1, True]}
+ -	boolean expected:	{u'a': 23, u'b': [1, True]}
+ -	null expected:	{u'a': 23, u'b': [1, True]}
+ -	array expected:	{u'a': 23, u'b': [1, True]}
+ -	object length greater than 1	{u'a': 23, u'b': [1, True]}
+10 objects read: 1 invalid, 0 bad, 0 with duplicate fields
+Error Statistics
+              1	{u'a': 23, u'b': [1, True]} does not match any alternative:

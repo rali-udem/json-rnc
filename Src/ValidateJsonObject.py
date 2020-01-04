@@ -84,7 +84,6 @@ def validate(sels,schema,parent,o):
                 # check properties
                 if "additionalProperties" in schema and type(schema["additionalProperties"]) is not bool:
                     # validate only values, not field names
-                    valid=""
                     for field in iter(o):
                         newSels=list(sels)
                         newSels.append(field)
