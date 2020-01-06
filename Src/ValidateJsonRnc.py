@@ -47,7 +47,7 @@ def duplicate_check_hook(pairs):
 #   prints the number of invalid objects
 #   when no message are logged, print something on stderr every 10000 records
 def validateStream(schema,idStr,stream,logMessages):
-    if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-04/schema#':
+    if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-07/schema#':
         print errorSchema([],"bad schema!!!")
         return
     idFn=None if idStr==None else lambda o:select(idStr.split("/"),o)
@@ -165,6 +165,8 @@ if __name__ == '__main__':
     parser.add_argument("schema",help="name of file containing the schema")
     parser.add_argument("json_file",help="name of the JSON file to validate",nargs='?')
     args=parser.parse_args()
+    if args.json_file != None and args.json_file.endswith(".json"): ## always split when dealing with .json file
+        args.split=True
     if args.debug : 
         traceRead=True
     schema = getSchema(args.schema)

@@ -1,0 +1,38 @@
+# adaptation of https://json-schema.org/learn/examples/card.schema.json
+start = {
+    familyName:string,
+    givenName :string,
+    fn?       : string,
+    additionalName?:[string],
+    honoricPrefix?:[string],
+    nickname? :string,
+    url?      :string,
+    email?    :{type?:string,value?:string},
+    tel?      :{type?:string,value?:string},
+    adr?      : address,
+    geo?      : geo,
+    tz?       : string,
+    photo?    :string,
+    logo?     :string,
+    sound?    :string,
+    bday?     :string,
+    title?    :string,
+    role?     :string,
+    org?      :{organizationName?:string,
+                organizationUnit?:string}
+}
+
+address= {
+    locality         :string,
+    region           :string,
+    post-office-box? :string,
+    extended-address?:string,
+    street-address?  :string,
+    postal-code?     :string,
+    country-name?    :string
+}
+
+geo = {
+    latitude :number@(minimum=-90,maximum=90),
+    longitude:number@(minimum=-180,maximum=180)
+}

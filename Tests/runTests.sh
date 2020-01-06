@@ -4,8 +4,13 @@ testFiles=(*.jsonrnc) # create array of jsonrnc files
 
 for file in ${testFiles[@]}
 do
+    touch $file    # force the creation of a new jsonrnc.json file
     name=`basename $file .jsonrnc`
-    ../Src/ValidateJsonRnc.py -s --stats $name.jsonrnc $name.json | cmp $name.out
+    if [ -f $name.json ]; then
+        ../Src/ValidateJsonRnc.py --stats $name.jsonrnc $name.json | cmp $name.out
+    else
+        ../Src/ValidateJsonRnc.py --stats $name.jsonrnc $name.jsonl | cmp $name.out
+    fi
     if [ $? != 0 ]; then
         echo 'no match for: ' $file
     fi

@@ -1,0 +1,6 @@
+##  example of a recursive type definition
+
+start = list | tree | value
+value = string | integer | number | boolean | null | list | tree  
+list  = [value]
+tree  = {*:value}@(minProperties=1,maxProperties=1)

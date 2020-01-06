@@ -3,8 +3,13 @@
 
 ####### Parse a JSON-rnc schema to produce a JSON-schema file
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
+###  modified in Dec 2019 
+###     - to take into account validation of objects with arbitrary keys
+###     - to generate Version 7 of json Schema (correction of a few bugs)
+###     - differentiate between .json and .jsonl files
+###     - add new examples
+###     - update README
 ########################################################################
-
 
 import sys,re,json,codecs,datetime,argparse,os
 from ppJson             import ppJson
@@ -25,8 +30,8 @@ def tokenizeRNC(input):
         # escaped quoted string regex taken from http://stackoverflow.com/questions/16130404/regex-string-and-escaped-quote
         ("STR",           r'"(?:\\.|[^"\\])*?"'+"|"+ r"'(?:\\.|[^'\\])*?'"),# double or single quoted string
         ("REGEX",         r"/.*?/"),                    # regex
-        ("NUMBER",        r'\d+(\.\d*)?'),              # integer or decimal number
-        ("IDENT",         r'[A-Za-z_][A-Za-z_0-9]*'),   # Identifiers
+        ("NUMBER",        r'-?\d+(\.\d*)?'),              # integer or decimal number
+        ("IDENT",         r'[A-Za-z_][-A-Za-z_0-9]*'),   # Identifiers
         ("INTERROGATION", r'\?'),
         ("OPEN_BRACE",    r'\{'),
         ("CLOSE_BRACE",   r'\}'),
@@ -94,7 +99,7 @@ class Token:
 # properties  = property , {[","] , property} ;
 # property    = (identifier , ["?"] | *) , ":" , type  | "(" , properties , ")" ;
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
-# facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
+# facetId     = "minimum" | "exclusiveMinimum" | "maximum" | "exclusiveMaximum"   (* for numbers *)
 #               | "pattern" | "minLength" | "maxLength"                           (* for strings *)
 #               | "minItems" | "maxItems"                                         (* for arrays *)
 #               | "minProperties" | "maxProperties";                              (* for objects *)
@@ -107,7 +112,7 @@ class Token:
 
 ## global shared variables for the parser functions 
 schema = {
-    "$schema":"http://json-schema.org/draft-04/schema#",
+    "$schema":"http://json-schema.org/draft-07/schema#",
     "definitions":{}
     }
 
@@ -155,7 +160,8 @@ def parseDef(): ## modifies the global schema variable
     if typedef!=None:
         if is_start:
             schema.update(typedef)
-        defs[ident]= typedef
+        else:
+            defs[ident]= typedef
     if traceParse:ident+"="+json.dumps(typedef,indent=3)
     return
 
@@ -215,8 +221,9 @@ def parseType():
             res={"type":"object"}
             res=checkFacets(res)
         else:
-            (props,required)=mergeProps(parseProps())
-            res = {"type":"object","properties":props,"required":required}
+            (props,required,additionalProperties)=mergeProps(parseProps())
+            res = {"type":"object","required":required,"additionalProperties":additionalProperties}
+            if len(props)>0:res["properties"]=props
             if token.kind == "CLOSE_BRACE":
                 token=tokenizer.next()
                 res=checkFacets(res)
@@ -252,19 +259,24 @@ def mergeProps(props):
     res={}
     if props==None:return res
     required=[]
+    additionalPropertiesFound=False;
     if type(props) is not list:
         props=[props]
     for po in props:
         if po!=None and type(po) is tuple: ## None can happen in case of a schema error
-            (prop,optional)=po
-            key=prop.keys()[0]
-            if key in res:
-                errorJsrnc("mergeProps","repeated property name:"+key,None)
-            res.update(prop)
-            if not(optional):
-                required.append(key)
+            (prop,optional,additionalProp)=po
+            keys=prop.keys()
+            if len(keys)>0:
+                key=keys[0]
+                if key in res:
+                    errorJsrnc("mergeProps","repeated property name:"+key,None)
+                res.update(prop)
+                if not(optional):
+                    required.append(key)
+            if additionalProp != False:
+                additionalPropertiesFound=additionalProp
     if traceParse: print ">>mergeProp:"+str((res,required))
-    return (res,required)
+    return (res,required,additionalPropertiesFound)
 
 # properties  = property , {[","] , property} ;
 def parseProps(): ## => [{id:"nom",type:...,(optional:True)?}]
@@ -278,12 +290,12 @@ def parseProps(): ## => [{id:"nom",type:...,(optional:True)?}]
     return res
 
 # property    = (identifier , ["?"] , ":" , type| "*")  | "(" , properties , ")" ;
-def parseProp(): ## => ({ident:type},optional[boolean]) | None
+def parseProp(): ## => ({ident:type},optional[boolean],additionalProperty) | None
     global token, tokenizer,traceParse,refs
     if traceParse:print "<<parseProp:"+str(token)
     res=None
-    if token.kind in ["IDENT","STR","STAR"]:
-        ident=token.value if token.kind in ["IDENT","STAR"] else token.value[1:-1]
+    if token.kind in ["IDENT","STR"]:
+        ident=token.value if token.kind == "IDENT" else token.value[1:-1] # remove outer quotes
         token=tokenizer.next()
         optional=False
         parsedType=None
@@ -293,7 +305,14 @@ def parseProp(): ## => ({ident:type},optional[boolean]) | None
         if token.kind == "COLON":
             token=tokenizer.next()
             parsedType=parseType()
-        res=({ident:parsedType},optional)
+        res=({ident:parsedType},optional,False)
+    elif token.kind=="STAR":
+        token=tokenizer.next()
+        if token.kind == "COLON":
+            token=tokenizer.next()
+            res=({},False,parseType())
+        else:
+            errorJsrnc("parseProp","colon expected after *",["IDENT","STR"])
     elif token.kind=="OPEN_PAREN":
         token=tokenizer.next()
         res = parseProps()
@@ -315,10 +334,18 @@ def checkFacets(res):
             res.update(facet)
     return res
 
+# taken from https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int
+# if the string corresponds to a string then return it else return a float
+def num(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
 # facets      = "@(" , facetId , "=" , value , {",", facetId , "=" , value } ")" ;
-# facetId     = "minimum" | "minimumExclusive" | "maximum" | "maximumExclusive"   (* for numbers *)
+# facetId     = "minimum" | "exclusiveMinimum" | "maximum" | "exclusiveMaximum"   (* for numbers *)
 #               | "pattern" | "minLength" | "maxLength" ;                         (* for strings *)
-#               | "minItems" | "maxItems"                                         (* for arrays *)
+#               | "miniTEMs" | "maxItems"                                         (* for arrays *)
 #               | "minProperties" | "maxProperties";                              (* for objects *)
 def parseFacets(theType):
     global token, tokenizer, traceParse
@@ -329,17 +356,15 @@ def parseFacets(theType):
         while token.kind != "CLOSE_PAREN":
             if token.kind in ["IDENT","STR"]:
                 ident=token.value
-                if ident in ["minimum","maximum","minLength","maxLength"]:
+                if ident in ["minimum","maximum"]:
                     token=tokenizer.next()
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
                         if token.kind == "NUMBER":
-                            facets.append({ident:int(token.value)})
+                            facets.append({ident:num(token.value)})
                             token=tokenizer.next()
                             if theType!= None and ident in ["minimum","maximum"] and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
-                            elif theType!= None and ident in ["minLength","maxLength"] and theType !="string":
-                                errorJsrnc("parseFacets","facet "+ident+" only applicable to string types",None);
                         else: 
                             errorJsrnc("parseFacets","number expected in facet "+ident,["NUMBER"])
                     else: 
@@ -361,16 +386,16 @@ def parseFacets(theType):
                     token=tokenizer.next()
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
-                        if token.kind=="IDENT" and token.value in ["true","false"]:
-                            facets.append({ident:token.value=="true"})
+                        if token.kind=="NUMBER":
+                            facets.append({ident:num(token.value)})
                             token=tokenizer.next()
                             if theType!= None and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
                         else: 
-                            errorJsrnc("parseFacets","boolean value expected for facet "+ident,["STR"]) 
+                            errorJsrnc("parseFacets","number expected for facet "+ident,["STR"]) 
                     else: 
                         errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
-                elif ident in ["minItems","maxItems","minProperties","maxProperties"]:
+                elif ident in ["minItems","maxItems","minProperties","maxProperties","minLength","maxLength"]:
                     token=tokenizer.next()
                     if token.kind == "EQUAL":
                         token=tokenizer.next()
@@ -379,8 +404,10 @@ def parseFacets(theType):
                             token=tokenizer.next()
                             if theType!= None and ident in ["minItems","maxItems"] and theType != "array":
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to array types",None)
-                            if theType!= None and ident in ["minProperties","maxProperties"] and theType != "object":
+                            elif theType!= None and ident in ["minProperties","maxProperties"] and theType != "object":
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to object types",None)
+                            elif theType!= None and ident in ["minLength","maxLength"] and theType !="string":
+                                errorJsrnc("parseFacets","facet "+ident+" only applicable to string types",None);
                         else: 
                             errorJsrnc("parseFacets","number expected in facet "+ident,["NUMBER"])
                     else: 
@@ -416,8 +443,8 @@ def parseJsonRnc(jsonrncContent):
             parseDef()
     except StopIteration:
         errorJsrnc("main","unexpected end of file",None)
-    ## check missing definitions
-    if "start" not in defs:
+    ## check missing definitions (the schema should contains one the valid starting point of ValidateObject.validate(...))
+    if all(map(lambda t: t not in schema,["type","oneOf","$ref"]))  and "start" not in defs:
         errorJsrnc("main","no start definition",None)
     for ref in refs:
         if ref not in defs:

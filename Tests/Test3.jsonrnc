@@ -1,8 +1,9 @@
-## schéma correspondant à l'exemple http://json-schema.org/example1.html
-start = [Product]
+## variation on the example of https://json-schema.org/learn/getting-started-step-by-step.html
+
+start = [Product]           ## list of products
 Product = {id:integer,
            name:string,
-           price:number@(minimum=0,exclusiveMinimum=true),
+           price:number@(exclusiveMinimum=0),
            tags?:[string],
            dimensions?:{length:number,width:number,height:number},
            warehouseLocation?:geo
