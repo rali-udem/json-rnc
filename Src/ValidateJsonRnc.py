@@ -98,7 +98,9 @@ def validateStream(schema,idStr,stream,logMessages):
 def validateObjects(schema,idStr,fileName,logMessages):
     if traceRead:print "validateObjects(%s,%s)"%(schema,fileName)
     if fileName==None:
-        return validateStream(schema,idStr,jsonSplitter(sys.stdin.read()),logMessages)
+        # it seems that sys.stdin.read() does not work from the console... but readlines() does
+        splitStdin = jsonSplitter("".join(sys.stdin.readlines()))  
+        return validateStream(schema,idStr,splitStdin,logMessages)
     else:
         if not os.path.exists(fileName):
             print "json file not found: "+fileName
