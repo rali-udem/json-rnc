@@ -24,9 +24,10 @@ def out(file,s):file.write(s)
 def outQuoted(file,s):
     if '\\' in s: s=s.replace('\\','\\\\')
     if '"'  in s: s=s.replace('"','\\"')
+    if '\n' in s: s=s.replace('\n','\\n')
     out(file,'"'+s+'"')
 
-def ppJson(file,obj,level=0):
+def ppJson(file,obj,level=0,sortkeys=True):
     if isinstance(obj,(str,unicode)):
         outQuoted(file,obj)
     elif obj==None:
@@ -39,11 +40,13 @@ def ppJson(file,obj,level=0):
         out(file,"{")
         n=len(obj)
         i=1
-        for key in sorted(obj,key=remove_accents):
+        keys=obj.keys()
+        if sortkeys: keys.sort(key=remove_accents)
+        for key in keys:
             if i>1 : out(file,"\n"+(level+1)*" ")
             outQuoted(file,key)
             out(file,":")
-            ppJson(file,obj[key],level+1+len(key)+3) # largeur de [{" de la clé
+            ppJson(file,obj[key],level+1+len(key)+3,sortkeys) # largeur de [{" de la clé
             if i<n: out(file,",")
             i+=1
         out(file,"}")
@@ -55,7 +58,7 @@ def ppJson(file,obj,level=0):
         i=1
         for elem in obj:
             if indent and i>1: out(file,"\n"+(level+1)*" ")
-            ppJson(file,elem,level+1)
+            ppJson(file,elem,level+1,sortkeys)
             if i<n: out(file,",")
             i+=1
         out(file,"]")
