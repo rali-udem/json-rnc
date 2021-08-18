@@ -27,7 +27,7 @@ def outQuoted(file,s):
     if '\n' in s: s=s.replace('\n','\\n')
     out(file,'"'+s+'"')
 
-def ppJson(file,obj,level=0,sortkeys=True):
+def ppJson(file,obj,level=0,sortkeys=False):
     if isinstance(obj,(str,unicode)):
         outQuoted(file,obj)
     elif obj==None:
@@ -40,7 +40,7 @@ def ppJson(file,obj,level=0,sortkeys=True):
         out(file,"{")
         n=len(obj)
         i=1
-        keys=obj.keys()
+        keys=list(obj.keys())
         if sortkeys: keys.sort(key=remove_accents)
         for key in keys:
             if i>1 : out(file,"\n"+(level+1)*" ")
