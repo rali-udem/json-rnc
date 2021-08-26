@@ -52,12 +52,11 @@ def ppJson(file,obj,level=0,sortkeys=False):
         out(file,"}")
     elif type(obj) is list:
         out(file,"[")
-        # indent only if one of the elements of the array are an object or a list
-        indent=any([type(elem) is dict or type(elem) is list for elem in obj])
         n=len(obj)
         i=1
         for elem in obj:
-            if indent and i>1: out(file,"\n"+(level+1)*" ")
+            # indent only when the next element of the array are an object or a list
+            if isinstance(elem, (list,dict)) and i>1: out(file,"\n"+(level+1)*" ")
             ppJson(file,elem,level+1,sortkeys)
             if i<n: out(file,",")
             i+=1
