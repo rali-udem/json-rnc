@@ -1,15 +1,10 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Validation of a JSON object according to a JSON-rnc schema
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
 ##   revision for adding statistics on error messages, May 2015
 ########################################################################
-
-## for displaying UTF-8 in the Textmate console
-import sys 
-reload(sys) 
-sys.setdefaultencoding("utf-8")
 
 import re
 
@@ -24,7 +19,7 @@ def errorSchema(sels,mess,infos):
     return "! Error in schema !\t"+errorValidate(sels,mess,infos)
     
 def isString(value):
-    return isinstance(value,(str,unicode))
+    return isinstance(value,str)
 def showVal(value,width=50):
     if type(value) is bool:
         val="true" if value else "false"
@@ -36,7 +31,7 @@ def showVal(value,width=50):
 #   this function makes use of the global schema
 def deref(selects,schema):
     global traceValidate,rootSchema
-    if traceValidate: print "$$deref(%s,%s)"%(str(selects),showVal(schema))
+    if traceValidate: print ("$$deref(%s,%s)"%(str(selects),showVal(schema)))
     if len(selects)==0:
         return schema
     field=selects[0]
@@ -53,12 +48,12 @@ def deref(selects,schema):
 #  return "" if no error otherwise returns an error message
 def validate(sels,schema,parent,o):
     global traceValidate
-    if traceValidate: print "$$validate:%s:%s:%s"%("/".join(sels),showVal(schema),showVal(o))
+    if traceValidate: print ("$$validate:%s:%s:%s"%("/".join(sels),showVal(schema),showVal(o)))
     if "oneOf" in schema:
         allMess=[]
         for alt in schema["oneOf"]:
             mess=validate(sels,alt,schema,o)
-            if traceValidate: print "$$$"+showVal(alt)+"=>"+mess
+            if traceValidate: print ("$$$"+showVal(alt)+"=>"+mess)
             if mess=="":
                 return ""
             allMess.append(mess)
@@ -74,7 +69,7 @@ def validate(sels,schema,parent,o):
                 # check length of object
                 nbProps=len(o)
                 valid=""
-                # print "nbProps:%d,%d,%d"%(nbProps,schema["minProperties"],schema["maxProperties"])
+                # print ("nbProps:%d,%d,%d"%(nbProps,schema["minProperties"],schema["maxProperties"]))
                 if "minProperties" in schema:
                     if nbProps<schema["minProperties"]:
                         valid+=errorValidate(sels,"object length less than "+str(schema["minProperties"]),showVal(o))
@@ -134,7 +129,7 @@ def validate(sels,schema,parent,o):
 
 def validateProperties(sels,props,required,parent,obj):
     global traceValidate
-    if traceValidate:print "$$validateProperties:%s:%s:%s"%(showVal(props),str(required),showVal(obj))
+    if traceValidate:print ("$$validateProperties:%s:%s:%s"%(showVal(props),str(required),showVal(obj)))
     valid=""
     if not(type(obj) is dict):
         return errorValidate(sels,"object expected:",showVal(obj))
@@ -160,7 +155,7 @@ def validateProperties(sels,props,required,parent,obj):
 
 def validateSimpleType(sels,schemaType,value):
     global traceValidate
-    if traceValidate:print "$$validateSimpleType:%s:%s:%s"%(str(schemaType),showVal(value),str(type(value)))
+    if traceValidate:print( "$$validateSimpleType:%s:%s:%s"%(str(schemaType),showVal(value),str(type(value))))
     if schemaType=="string":
         return "" if isString(value) \
                   else errorValidate(sels,"string expected:",showVal(value)) 
@@ -180,7 +175,7 @@ def validateSimpleType(sels,schemaType,value):
 
 def validateFacets(sels,schema,value):
     global traceValidate
-    if traceValidate:print "$$validateFacets:%s:%s"%(str(schema),str(value))
+    if traceValidate:print ("$$validateFacets:%s:%s"%(str(schema),str(value)))
     valid=""
     theType=schema["type"]
     if theType in ["integer","number"]:
@@ -240,15 +235,15 @@ def printErrorStatistics():
     global errorTable
     if len(errorTable)==0:return
     errors=sorted(errorTable.items(),key=lambda i:i[1],reverse=True)
-    print "Error Statistics"
+    print ("Error Statistics")
     for (mess,nb) in errors:
-        print showNum(nb,15)+"\t"+mess
+        print (showNum(nb,15)+"\t"+mess)
 
 # list of ids of erroneous objects
 errorIdList=[]
 def printErrorIdList():
     global errorIdList
-    print ";".join([id+"p" for id in errorIdList])
+    print (";".join([id+"p" for id in errorIdList]))
 
 ## validate a single json object (json), identified by recordId (a string), according to a json schema
 def validateObject(obj,recordId, schema,logMessages,traceRead):
@@ -259,7 +254,7 @@ def validateObject(obj,recordId, schema,logMessages,traceRead):
     if mess!="":
         errorIdList.append(recordId)
         if logMessages:
-            print recordId+":"+showVal(obj,100)+"\n"+mess,
+            print (recordId+":"+showVal(obj,100)+"\n"+mess,end="")
         for messLine in mess.split("\n")[0:-1]: ## mess can contain more than one error message
             messType=":".join(messLine.split("\t")[0:2])
             if messType in errorTable: 

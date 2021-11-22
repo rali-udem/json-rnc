@@ -5,10 +5,6 @@
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
 ########################################################################
 
-## truc pour afficher du UTF-8 dans la console TextMate
-import sys 
-reload(sys) 
-sys.setdefaultencoding("utf-8")
 import json
 
 ## to sort object fields without accents
@@ -28,7 +24,7 @@ def outQuoted(file,s):
     out(file,'"'+s+'"')
 
 def ppJson(file,obj,level=0,sortkeys=False):
-    if isinstance(obj,(str,unicode)):
+    if isinstance(obj,str):
         outQuoted(file,obj)
     elif obj==None:
         out(file,"null")
