@@ -6,7 +6,7 @@
 ##   revision for adding statistics on error messages, May 2015
 ########################################################################
 
-import re,pprint,json,os,datetime,argparse
+import pprint,json,os,datetime,argparse,sys
 
 ## flag for debugging
 traceRead=False
@@ -43,7 +43,7 @@ def duplicate_check_hook(pairs):
 #   when no message are logged, print something on stderr every 10000 records
 def validateStream(schema,idStr,stream,logMessages):
     if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-07/schema#':
-        print (errorSchema([],"bad schema!!!"))
+        print (errorSchema([],"bad schema!!!",""))
         return
     idFn=None if idStr==None else lambda o:select(idStr.split("/"),o)
     nb=0
