@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Validation of a JSON file according to a JSON-rnc schema
