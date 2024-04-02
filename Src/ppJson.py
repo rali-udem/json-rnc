@@ -1,14 +1,10 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Validation of a JSON file according to a JSON-rnc schema
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
 ########################################################################
 
-## truc pour afficher du UTF-8 dans la console TextMate
-import sys 
-reload(sys) 
-sys.setdefaultencoding("utf-8")
 import json
 
 ## to sort object fields without accents
@@ -28,7 +24,7 @@ def outQuoted(file,s):
     out(file,'"'+s+'"')
 
 def ppJson(file,obj,level=0,sortkeys=False):
-    if isinstance(obj,(str,unicode)):
+    if isinstance(obj,str):
         outQuoted(file,obj)
     elif obj==None:
         out(file,"null")
@@ -52,12 +48,11 @@ def ppJson(file,obj,level=0,sortkeys=False):
         out(file,"}")
     elif type(obj) is list:
         out(file,"[")
-        # indent only if one of the elements of the array are an object or a list
-        indent=any([type(elem) is dict or type(elem) is list for elem in obj])
         n=len(obj)
         i=1
         for elem in obj:
-            if indent and i>1: out(file,"\n"+(level+1)*" ")
+            # indent only when the next element of the array are an object or a list
+            if isinstance(elem, (list,dict)) and i>1: out(file,"\n"+(level+1)*" ")
             ppJson(file,elem,level+1,sortkeys)
             if i<n: out(file,",")
             i+=1
@@ -65,6 +60,7 @@ def ppJson(file,obj,level=0,sortkeys=False):
     if level==0:out(file,"\n")
 
 if __name__ == '__main__':
+    import sys
     # read many json objects from stdin, each object possibly spanning more than one line
     # taken from: http://stackoverflow.com/questions/20400818/python-trying-to-deserialize-multiple-json-objects-in-a-file-with-each-object-s
     for line in sys.stdin:

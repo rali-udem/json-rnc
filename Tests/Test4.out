@@ -1,4 +1,4 @@
-1:[{u'postalCode': u'H0H 0H0', u'nombreOuChaineVide': 45.8, u'address': 45, u'name': u'Gu...ess': 10}]
+1:[{'name': 'Guy', 'id': 'Lapalme', 'address': 45, 'postalCode': 'H0H 0H0', 'nombreOuChai...e': None}]
 [2]/name	string expected:	null
 true does not match any alternative:
  -[2]/id	string expected:	true

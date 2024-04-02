@@ -1,14 +1,14 @@
-1:{u'a1': 34}
-{u'a1': 34} does not match any alternative:
+1:{'a1': 34}
+{'a1': 34} does not match any alternative:
  -(#/definitions/a)	missing required field:a2	
  -(#/definitions/b)	missing required field:b	
 (#/definitions/b)	unexpected field in object:a1	
-2:{u'a2': u'bonjour'}
-{u'a2': u'bonjour'} does not match any alternative:
+2:{'a2': 'bonjour'}
+{'a2': 'bonjour'} does not match any alternative:
  -	missing required field:a1	
  -	missing required field:b	
 	unexpected field in object:a2	
 4 objects read: 2 invalid, 0 bad, 0 with duplicate fields
 Error Statistics
-              1	{u'a1': 34} does not match any alternative:
-              1	{u'a2': u'bonjour'} does not match any alternative:
+              1	{'a1': 34} does not match any alternative:
+              1	{'a2': 'bonjour'} does not match any alternative:
