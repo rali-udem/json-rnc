@@ -13,11 +13,9 @@ def remove_accents(input_str):
     nfkd_form = unicodedata.normalize('NFKD', input_str.decode("utf-8"))
     return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
-MAXLENGTH = 100
-
 #### prettyprint a JSON in more compact format
 ##   that I find more readable
-def ppJson(file,obj,level=0,sortkeys=False):
+def ppJson(file,obj,level=0,sortkeys=False,max_length=100):
     # auxiliary function that creates a string
     def pp(obj,level,res):
         def out(s):
@@ -48,7 +46,7 @@ def ppJson(file,obj,level=0,sortkeys=False):
             children = list(map(lambda elem:pp(elem,level+1,"") ,obj))
             indent = any(map(lambda elem: isinstance(elem,(list,dict)),obj))
             if not indent: # check if all children fit on the same line
-                if sum(map(lambda e:len(e),children))+len(list(children))+level+2 > MAXLENGTH:
+                if sum(map(lambda e:len(e),children))+len(list(children))+level+2 > max_length:
                     indent = True
             out("["+
                 ((",\n"+(level+1)*" ") if indent else ",").join(children)
