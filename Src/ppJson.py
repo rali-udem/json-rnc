@@ -46,11 +46,10 @@ def ppJson(file,obj,level=0,sortkeys=False,max_length=100):
             children = list(map(lambda elem:pp(elem,level+1,"") ,obj))
             indent = any(map(lambda elem: isinstance(elem,(list,dict)),obj))
             if not indent: # check if all children fit on the same line
-                if sum(map(lambda e:len(e),children))+len(list(children))+level+2 > max_length:
+                # sum of (length of each string + 2 quotes) + number of commas + level+2
+                if sum(map(lambda e:len(e)+2,children))+len(list(children))+level+2 > max_length:
                     indent = True
-            out("["+
-                ((",\n"+(level+1)*" ") if indent else ",").join(children)
-                +"]")
+            out("["+ ((",\n"+(level+1)*" ") if indent else ",").join(children)+"]")
         return res
     file.write(pp(obj,level,""))
     file.write("\n")
