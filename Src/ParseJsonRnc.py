@@ -130,7 +130,7 @@ def errorJsrnc(module,message,recoveryTokens):
     errorsInSchema+=1
     line = lines[token.line_num] if token.line_num<len(lines) else ""
     print ("line %3d: %s"%(token.line_num,line),end='')
-    print ((token.column+10)*" ")+"↑:"+message
+    print (((token.column+10)*" ")+"↑:"+message)
     if recoveryTokens!=None:
         endTokens=set(["EOF"]+recoveryTokens)
         while token.kind not in endTokens:
