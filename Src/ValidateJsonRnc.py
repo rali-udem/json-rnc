@@ -152,6 +152,7 @@ def getSchema(jsonrncFile):
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description="Parse a JSON-rnc schema and validate a JSON file according to it. "+
                             "The number of invalid objects (modulo 256) is returned as the exit code of the program.")
+    parser.add_argument("--slurp","-sl",help="Consider the input as a single JSON object",action="store_true")
     parser.add_argument("--split","-s",help="Separate the input JSON objects each a single line.",action="store_true")
     parser.add_argument("--debug",help="Trace calls for debugging",action="store_true")
     parser.add_argument("-id",help="use this selector as a list of keys each separated by a slash, a.k.a. JSON pointer, (e.g. '_id/$oid') "
@@ -168,7 +169,9 @@ if __name__ == '__main__':
         traceRead=True
     schema = getSchema(args.schema)
     if schema!=None:
-        if args.split:
+        if args.slurp:
+            nbInvalid = validateStream(schema,args.id,[open(args.json_file,"r").read()],not(args.nolog))
+        elif args.split:
             nbInvalid=validateObjects(schema,args.id,args.json_file,not(args.nolog))
         else:
             nbInvalid=validateLines(schema,args.id,args.json_file,not(args.nolog))
