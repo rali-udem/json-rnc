@@ -205,6 +205,7 @@ If no JSON lines file is specified, it validates the standard input.
 
 *Command line arguments*
 
+- *-sl* or *--slurp* : consider the input file as a single JSON object 
 - *-s* or *--split* : if multiple JSON objects are on a single line or if a JSON spans multiple lines, the validator will split and merge them before validation. This argument is set by default if the source file has a `.json` extension.
 - *-id* : objects that do not conform to the schema are usually identified by their line number in the file. If another field or sequence of fields could prove more useful as identification, it can be specified as the value for the `-id` optional flag. Its value is a list of keys each separated by a slash (e.g. `'_id/$oid'`) ([JSON Pointer][] notation). When the '-id' flag is given, the validator will check that ids are not repeated within the whole file.
 - *-st* or *--stats* : at the end of execution, output the number of occurrences of each error message
@@ -218,7 +219,7 @@ If no JSON lines file is specified, it validates the standard input.
 
 If the JSON file has objects spanning many lines of the input, its format can be reorganized with this filter that reads the standard input for JSON objects and outputs each JSON object on a single line. Newlines within strings are replaced with `\n` so that they are correctly read back. This is the process used by the *-s* command argument of the validator.
 
-This process can be slow for dealing with a single JSON object spanning thousands of lines (e.g. a dictionary with many entries). In this case, it will be more efficient to use the following Unix filter:
+This process can be slow for dealing with a single JSON object spanning thousands of lines (e.g. a dictionary with many entries). In this case, it will be more efficient to use the *--slurp" argument or the following Unix filter:
 
 ```
 tr -d '\n' < f.json | ./ValidateJsonRnc.py schema.jsonrnc 
@@ -231,7 +232,7 @@ tr -d '\n' < f.json | ./ValidateJsonRnc.py schema.jsonrnc
 
 # 6. Installation
 
-Python 2.7 source files are in the `Src` directory and a few examples can be found in the `Tests` directory.
+Python 3 source files are in the `Src` directory and a few examples can be found in the `Tests` directory.
 
 [JSON Pointer]: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-07#section-5
 [JSON Schema V-7]: http://json-schema.org/documentation.html "JSON Schema - Documentation"
