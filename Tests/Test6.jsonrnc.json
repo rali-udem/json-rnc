@@ -2,10 +2,10 @@
  "definitions":{},
  "oneOf":[{"type":"integer"},
           {"type":"null"},
-          {"maxProperties":0,
-           "minProperties":8,
-           "type":"object"},
-          {"items":{"type":"integer"},
+          {"type":"object",
+           "maxProperties":0,
+           "minProperties":8},
+          {"type":"array",
+           "items":{"type":"integer"},
            "maxItems":2,
-           "minItems":1,
-           "type":"array"}]}
+           "minItems":1}]}

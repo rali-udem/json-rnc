@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Parse a JSON-rnc schema to produce a JSON-schema file
@@ -55,7 +55,7 @@ def tokenizeRNC(input):
     for mo in re.finditer(tok_regex, input):
         kind = mo.lastgroup
         value = mo.group(kind)
-        # print "kind:"+kind+"; value:"+value
+        # print ("kind:"+kind+"; value:"+value)
         if kind == "EOL":
             line_start = mo.end()
             line_num += 1
@@ -126,21 +126,21 @@ errorsInSchema=0
 
 def errorJsrnc(module,message,recoveryTokens):
     global lines,token,tokenizer,errorsInSchema,traceParse
-    if traceParse:print ">>>errorJsrnc:"+module
+    if traceParse:print( ">>>errorJsrnc:"+module)
     errorsInSchema+=1
     line = lines[token.line_num] if token.line_num<len(lines) else ""
-    print "line %3d: %s"%(token.line_num,line),
-    print ((token.column+10)*" ")+"↑:"+message
+    print ("line %3d: %s"%(token.line_num,line),end='')
+    print (((token.column+10)*" ")+"↑:"+message)
     if recoveryTokens!=None:
         endTokens=set(["EOF"]+recoveryTokens)
         while token.kind not in endTokens:
-            token=tokenizer.next()
+            token=next(tokenizer)
 
 # definitions = "start" = type | {definition} ;
 # definition  = (identifier | string ) , ["=" , types] ;
 def parseDef(): ## modifies the global schema variable
     global token, tokenizer,defs, refs, schema,traceParse
-    if traceParse:print ">>>parseDef:"+str(token)
+    if traceParse:print (">>>parseDef:"+str(token))
     is_start=False
     typedef=None
     if token.kind in set(["IDENT","STR","START"]):
@@ -149,9 +149,9 @@ def parseDef(): ## modifies the global schema variable
     else:
         errorJsrnc("parseDef","identifier expected at start of definition",["IDENT"])
         ident="**dummy**"
-    token=tokenizer.next()
+    token=next(tokenizer)
     if token.kind=="EQUAL":
-        token=tokenizer.next()
+        token=next(tokenizer)
     else:
         errorJsrnc("parseDef","equal expected in a definition",None)
     typedef = parseTypes()
@@ -168,21 +168,21 @@ def parseDef(): ## modifies the global schema variable
 ## types       = type , ( {"," , type} | {"|" , type} ) ;
 def parseTypes(): ## =>  
     global token,tokenizer, traceParse
-    if traceParse:print "<<parseTypes:"+str(token)
+    if traceParse:print ("<<parseTypes:"+str(token))
     res = parseType()
     if token.kind=="COMMA":
         res1=res
         res={res1}
         while token.kind=="COMMA":
-            token=tokenizer.next()
+            token=next(tokenizer)
             res1.update(parseType())
     elif token.kind=="VERT_BAR":
         res1=[res]
         res={"oneOf":res1}
         while token.kind=="VERT_BAR":
-            token=tokenizer.next()
+            token=next(tokenizer)
             res1.append(parseType())
-    if traceParse:print ">>parseTypes:"+str(res)
+    if traceParse:print (">>parseTypes:"+str(res))
     return res
 
 ## type        = ("string" | "integer" | "number" | "boolean" | "null"     (* primitive types *)
@@ -194,30 +194,30 @@ def parseTypes(): ## =>
 ##               | "(" , types   , ")" ;                                   (* grouping *)
 def parseType():
     global token,tokenizer,traceParse,refs
-    if traceParse:print "<<parseType:"+str(token)
+    if traceParse:print ("<<parseType:"+str(token))
     res=None
     if token.kind in set(["STRING","INTEGER","NUMBER","BOOLEAN","NULL"]):
         res={"type":token.value}
-        token=tokenizer.next()
+        token=next(tokenizer)
         res=checkFacets(res)
     elif token.kind == "IDENT": 
         res={"$ref":"#/definitions/"+token.value}
         refs.add(token.value)
-        token=tokenizer.next()
+        token=next(tokenizer)
         res=checkFacets(res)
     elif token.kind == "STR":
         res={"$ref":"#/definitions/"+token.value[1:-1]}
         refs.add(token.value[1:-1])
-        token=tokenizer.next()
+        token=next(tokenizer)
         res=checkFacets(res)
     elif token.kind == "REGEX":
         res = {"type":"string","pattern":token.value[1:-1]}
-        token=tokenizer.next()
+        token=next(tokenizer)
         res=checkFacets(res)
     elif token.kind == "OPEN_BRACE":
-        token=tokenizer.next()
+        token=next(tokenizer)
         if token.kind == "CLOSE_BRACE": # skip object validation on {}
-            token=tokenizer.next()
+            token=next(tokenizer)
             res={"type":"object"}
             res=checkFacets(res)
         else:
@@ -225,37 +225,37 @@ def parseType():
             res = {"type":"object","required":required,"additionalProperties":additionalProperties}
             if len(props)>0:res["properties"]=props
             if token.kind == "CLOSE_BRACE":
-                token=tokenizer.next()
+                token=next(tokenizer)
                 res=checkFacets(res)
             else:
                 errorJsrnc("parseType","closing brace expected",["CLOSE_BRACE"])
     elif token.kind == "OPEN_BRACKET":
-        token=tokenizer.next()
+        token=next(tokenizer)
         if token.kind == "CLOSE_BRACKET": ## skip array validation on []
-            token=tokenizer.next()
+            token=next(tokenizer)
             res={"type":"array"}
             res=checkFacets(res)
         else:
             res = {"type":"array","items":parseTypes()}
             if token.kind == "CLOSE_BRACKET":
-                token=tokenizer.next()
+                token=next(tokenizer)
                 res=checkFacets(res)
             else:
                 errorJsrnc("parseType","closing bracket expected",["CLOSE_BRACKET"])
     elif token.kind == "OPEN_PAREN":
-        token=tokenizer.next()
+        token=next(tokenizer)
         res = parseTypes()
         if token.kind == "CLOSE_PAREN":
-            token=tokenizer.next()
+            token=next(tokenizer)
         else:
             errorJsrnc("parseType","closing parenthesis expected",["CLOSE_PAREN"])
     else:
         errorJsrnc("parseType","ident or json type expected",["IDENT","STR"])
-    if traceParse:print ">>parseType:"+str(res)    
+    if traceParse:print (">>parseType:"+str(res)    )
     return res
 
 def mergeProps(props):
-    if traceParse: print "<<mergeProp:"+str(props)
+    if traceParse: print ("<<mergeProp:"+str(props))
     res={}
     if props==None:return res
     required=[]
@@ -267,7 +267,7 @@ def mergeProps(props):
             (prop,optional,additionalProp)=po
             keys=prop.keys()
             if len(keys)>0:
-                key=keys[0]
+                key=list(keys)[0]
                 if key in res:
                     errorJsrnc("mergeProps","repeated property name:"+key,None)
                 res.update(prop)
@@ -275,60 +275,60 @@ def mergeProps(props):
                     required.append(key)
             if additionalProp != False:
                 additionalPropertiesFound=additionalProp
-    if traceParse: print ">>mergeProp:"+str((res,required))
+    if traceParse: print (">>mergeProp:"+str((res,required)))
     return (res,required,additionalPropertiesFound)
 
 # properties  = property , {[","] , property} ;
 def parseProps(): ## => [{id:"nom",type:...,(optional:True)?}]
     global token,tokenizer,traceParse
-    if traceParse:print "<<parseProps:"+str(token)
+    if traceParse:print ("<<parseProps:"+str(token))
     res = [parseProp()]
     while token.kind in ["COMMA","IDENT","STR","OPEN_PAREN"]:
-        if token.kind=="COMMA": token=tokenizer.next()
+        if token.kind=="COMMA": token=next(tokenizer)
         res.append(parseProp())
-    if traceParse:print ">>parseProps:"+str(res)
+    if traceParse:print (">>parseProps:"+str(res))
     return res
 
 # property    = (identifier , ["?"] , ":" , type| "*")  | "(" , properties , ")" ;
 def parseProp(): ## => ({ident:type},optional[boolean],additionalProperty) | None
     global token, tokenizer,traceParse,refs
-    if traceParse:print "<<parseProp:"+str(token)
+    if traceParse:print ("<<parseProp:"+str(token))
     res=None
     if token.kind in ["IDENT","STR"]:
         ident=token.value if token.kind == "IDENT" else token.value[1:-1] # remove outer quotes
-        token=tokenizer.next()
+        token=next(tokenizer)
         optional=False
         parsedType=None
         if token.kind =="INTERROGATION":
             optional=True
-            token=tokenizer.next()
+            token=next(tokenizer)
         if token.kind == "COLON":
-            token=tokenizer.next()
+            token=next(tokenizer)
             parsedType=parseType()
         res=({ident:parsedType},optional,False)
     elif token.kind=="STAR":
-        token=tokenizer.next()
+        token=next(tokenizer)
         if token.kind == "COLON":
-            token=tokenizer.next()
+            token=next(tokenizer)
             res=({},False,parseType())
         else:
             errorJsrnc("parseProp","colon expected after *",["IDENT","STR"])
     elif token.kind=="OPEN_PAREN":
-        token=tokenizer.next()
+        token=next(tokenizer)
         res = parseProps()
         if token.kind == "CLOSE_PAREN":
-            token=tokenizer.next()
+            token=next(tokenizer)
         else:
             errorJsrnc("parseProp","closing paren expected",["CLOSE_PAREN"])        
     else:
         errorJsrnc("parseProp","ident, string or open parenthesis expected at the start of a prop",["IDENT","STR"])
-    if traceParse:print ">>parseProp:"+str(res)
+    if traceParse:print (">>parseProp:"+str(res))
     return res
 
 def checkFacets(res):
     global token,tokenizer
     if token.kind=="AT":
-        token=tokenizer.next()
+        token=next(tokenizer)
         theType=res["type"] if "type" in res else None # TODO: try to take into account the #ref 
         for facet in parseFacets(theType):
             res.update(facet)
@@ -349,20 +349,20 @@ def num(s):
 #               | "minProperties" | "maxProperties";                              (* for objects *)
 def parseFacets(theType):
     global token, tokenizer, traceParse
-    if traceParse:print "<<parseFacets:"+str(token)
+    if traceParse:print ("<<parseFacets:"+str(token))
     facets=[]
     if token.kind=="OPEN_PAREN":
-        token=tokenizer.next()
+        token=next(tokenizer)
         while token.kind != "CLOSE_PAREN":
             if token.kind in ["IDENT","STR"]:
                 ident=token.value
                 if ident in ["minimum","maximum"]:
-                    token=tokenizer.next()
+                    token=next(tokenizer)
                     if token.kind == "EQUAL":
-                        token=tokenizer.next()
+                        token=next(tokenizer)
                         if token.kind == "NUMBER":
                             facets.append({ident:num(token.value)})
-                            token=tokenizer.next()
+                            token=next(tokenizer)
                             if theType!= None and ident in ["minimum","maximum"] and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
                         else: 
@@ -370,12 +370,12 @@ def parseFacets(theType):
                     else: 
                         errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
                 elif ident=="pattern":
-                    token=tokenizer.next()
+                    token=next(tokenizer)
                     if token.kind == "EQUAL":
-                        token=tokenizer.next()
+                        token=next(tokenizer)
                         if token.kind == "STR":
                             facets.append({ident:token.value[1:-1]})
-                            token=tokenizer.next()
+                            token=next(tokenizer)
                             if theType!= None and theType != "string":
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to string",None);
                         else:
@@ -383,12 +383,12 @@ def parseFacets(theType):
                     else: 
                         errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
                 elif ident == "exclusiveMinimum" or ident=="exclusiveMaximum":
-                    token=tokenizer.next()
+                    token=next(tokenizer)
                     if token.kind == "EQUAL":
-                        token=tokenizer.next()
+                        token=next(tokenizer)
                         if token.kind=="NUMBER":
                             facets.append({ident:num(token.value)})
-                            token=tokenizer.next()
+                            token=next(tokenizer)
                             if theType!= None and theType not in ["number","integer"]:
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to numeric types",None);
                         else: 
@@ -396,12 +396,12 @@ def parseFacets(theType):
                     else: 
                         errorJsrnc("parseFacets","= expected in facet",["IDENT","STR"])
                 elif ident in ["minItems","maxItems","minProperties","maxProperties","minLength","maxLength"]:
-                    token=tokenizer.next()
+                    token=next(tokenizer)
                     if token.kind == "EQUAL":
-                        token=tokenizer.next()
+                        token=next(tokenizer)
                         if token.kind == "NUMBER":
                             facets.append({ident:int(token.value)})
-                            token=tokenizer.next()
+                            token=next(tokenizer)
                             if theType!= None and ident in ["minItems","maxItems"] and theType != "array":
                                 errorJsrnc("parseFacets","facet "+ident+" only applicable to array types",None)
                             elif theType!= None and ident in ["minProperties","maxProperties"] and theType != "object":
@@ -419,12 +419,12 @@ def parseFacets(theType):
                 errorJsrnc("parseFacets","identifier expected in facet",["IDENT","STR"])
                 break
             if token.kind == "COMMA":
-                token=tokenizer.next()
-        token=tokenizer.next() # skip closing parenthesis
+                token=next(tokenizer)
+        token=next(tokenizer) # skip closing parenthesis
     else: 
         errorJsrnc("parseFacets","open parenthesis expected at the start of a facet",["IDENT","STR"])
     #todo: check that min{inum|Length|Items|Properties} are <= than the corresponding max...
-    if traceParse:print ">>parseFacets:"+str(facets)
+    if traceParse:print (">>parseFacets:"+str(facets))
     return facets
 
 
@@ -437,7 +437,7 @@ def parseJsonRnc(jsonrncContent):
         lines.append(line)
     # print lines
     tokenizer = tokenizeRNC("".join(lines[1:]))
-    token = tokenizer.next()
+    token = next(tokenizer)
     try:
         while token.kind!="EOF":
             parseDef()
@@ -462,12 +462,12 @@ if __name__ == '__main__':
         schema=parseJsonRnc(codecs.getreader('utf8')(sys.stdin))
     else:
         if not os.path.exists(pythonSchemaFileName):
-            print "schema file not found: "+pythonSchemaFileName
+            print ("schema file not found: "+pythonSchemaFileName)
             exit(1)
         else:
             schema=parseJsonRnc(open(pythonSchemaFileName))
     if type(schema) is int:
-        print str(schema)+" errors found in schema in "+pythonSchemaFileName
+        print (str(schema)+" errors found in schema in "+pythonSchemaFileName)
     else:
         schema["title"]="Created from JSON-RNC: "+pythonSchemaFileName
         schema["description"]="Written: "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M")

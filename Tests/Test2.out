@@ -1,4 +1,4 @@
-3:{u'code': u'allo', u'phoneNumber': [{u'code': 345, u'location': u'home'}, {u'code': Fal...\xe9bec'}}
+3:{'address': {'city': 'Québec'}, 'phoneNumber': [{'location': 'home', 'code': 345}, {'lo...': 'allo'}
 phoneNumber/[1]/code	integer expected:	false
 4:{}
 	missing required field:address	
@@ -10,6 +10,6 @@ phoneNumber/[1]/code	integer expected:	false
 7 objects read: 4 invalid, 0 bad, 0 with duplicate fields
 Error Statistics
               2	:object expected:
-              1	:missing required field:address
               1	phoneNumber/[1]/code:integer expected:
+              1	:missing required field:address
               1	:missing required field:phoneNumber

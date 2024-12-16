@@ -1,14 +1,10 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Validation of a JSON file according to a JSON-rnc schema
 ###  Guy Lapalme (lapalme@iro.umontreal.ca) March 2015
 ########################################################################
 
-## truc pour afficher du UTF-8 dans la console TextMate
-import sys 
-reload(sys) 
-sys.setdefaultencoding("utf-8")
 import json
 
 ## to sort object fields without accents
@@ -19,57 +15,58 @@ def remove_accents(input_str):
 
 #### prettyprint a JSON in more compact format
 ##   that I find more readable
+def ppJson(file,obj,level=0,sortkeys=False,max_length=100):
+    # auxiliary function that creates a string
+    def pp(obj,level,res):
+        def out(s):
+            nonlocal res
+            res += s
 
-def out(file,s):file.write(s)
-def outQuoted(file,s):
-    if '\\' in s: s=s.replace('\\','\\\\')
-    if '"'  in s: s=s.replace('"','\\"')
-    out(file,'"'+s+'"')
+        def quoted(s):
+            if '\\' in s: s = s.replace('\\', '\\\\')
+            if '"' in s: s = s.replace('"', '\\"')
+            if '\n' in s: s = s.replace('\n', '\\n')
+            return '"' + s + '"'
 
-def ppJson(file,obj,level=0):
-    if isinstance(obj,(str,unicode)):
-        outQuoted(file,obj)
-    elif obj==None:
-        out(file,"null")
-    elif type(obj) is bool:
-        out(file,"true" if obj else "false")
-    elif isinstance(obj,(int,float)):
-        out(file,str(obj))
-    elif type(obj) is dict:
-        out(file,"{")
-        n=len(obj)
-        i=1
-        for key in sorted(obj,key=remove_accents):
-            if i>1 : out(file,"\n"+(level+1)*" ")
-            outQuoted(file,key)
-            out(file,":")
-            ppJson(file,obj[key],level+1+len(key)+3) # largeur de [{" de la clé
-            if i<n: out(file,",")
-            i+=1
-        out(file,"}")
-    elif type(obj) is list:
-        out(file,"[")
-        # indent only if one of the elements of the array are an object or a list
-        indent=any([type(elem) is dict or type(elem) is list for elem in obj])
-        n=len(obj)
-        i=1
-        for elem in obj:
-            if indent and i>1: out(file,"\n"+(level+1)*" ")
-            ppJson(file,elem,level+1)
-            if i<n: out(file,",")
-            i+=1
-        out(file,"]")
-    if level==0:out(file,"\n")
+        if isinstance(obj,str):
+            out(quoted(obj))
+        elif obj==None:
+            out("null")
+        elif type(obj) is bool:
+            out("true" if obj else "false")
+        elif isinstance(obj,(int,float)):
+            out(str(obj))
+        elif type(obj) is dict:
+            keys=list(obj.keys())
+            if sortkeys: keys.sort(key=remove_accents)
+            out("{"+
+                (",\n"+(level+1)*" ").join(map(lambda key:quoted(key)+":"+pp(obj[key],level+1+len(key)+3,""),keys))
+                +"}")
+        elif type(obj) is list:
+            children = list(map(lambda elem:pp(elem,level+1,"") ,obj))
+            indent = any(map(lambda elem: isinstance(elem,(list,dict)),obj))
+            if not indent: # check if all children fit on the same line
+                # sum of (length of each string + 2 quotes) + number of commas + level+2
+                if sum(map(lambda e:len(e)+2,children))+len(list(children))+level+2 > max_length:
+                    indent = True
+            out("["+ ((",\n"+(level+1)*" ") if indent else ",").join(children)+"]")
+        return res
+    file.write(pp(obj,level,""))
+    file.write("\n")
 
 if __name__ == '__main__':
-    # read many json objects from stdin, each object possibly spanning more than one line
-    # taken from: http://stackoverflow.com/questions/20400818/python-trying-to-deserialize-multiple-json-objects-in-a-file-with-each-object-s
-    for line in sys.stdin:
-        while True:
-            try:
-                obj=json.loads(line)
-                ppJson(sys.stdout,obj)
-                break
-            except:
-                line += next(sys.stdin)
-
+    import sys
+    content = sys.stdin.read().strip()
+    try: # reading the whole file in case it is a single valid JSON
+        ppJson(sys.stdout,json.loads(content))
+    except json.JSONDecodeError as e:
+        # read many json objects from stdin, each object possibly spanning more than one line
+        # taken from: http://stackoverflow.com/questions/20400818/python-trying-to-deserialize-multiple-json-objects-in-a-file-with-each-object-s
+        for line in content.split("\n"):
+            while True:
+                try:
+                    obj=json.loads(line)
+                    ppJson(sys.stdout,obj)
+                    break
+                except:
+                    line += next(sys.stdin)

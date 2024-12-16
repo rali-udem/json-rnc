@@ -1,7 +1,7 @@
-1:[{u'postalCode': u'H0H 0H0', u'address': 45, u'name': u'Guy', u'id': u'Lapalme'}, {u'ad...ress': 3}]
+1:[{'name': 'Guy', 'id': 'Lapalme', 'address': 45, 'postalCode': 'H0H 0H0'}, {'id': {'no'...e': None}]
 [0]/(#/definitions/person)/postalCode	array expected:	H0H 0H0
-{u'no': 24} does not match any alternative:
- -[1]/id	string expected:	{u'no': 24}
+{'no': 24} does not match any alternative:
+ -[1]/id	string expected:	{'no': 24}
  -[1]/id	missing required field:w	
 [2]/name	string expected:	null
 true does not match any alternative:
@@ -10,5 +10,5 @@ true does not match any alternative:
 [2]/address	illegal value:	3 <= 10 excl
 1 objects read: 1 invalid, 0 bad, 0 with duplicate fields
 Error Statistics
-              1	{u'no': 24} does not match any alternative:
               1	[0]/(#/definitions/person)/postalCode:array expected:
+              1	{'no': 24} does not match any alternative:

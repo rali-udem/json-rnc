@@ -25,9 +25,9 @@ A *type* can be one of the following:
 
 - a **simple JSON type** indicated by one of the following keywords: `string`, `integer`, `number`, `boolean` and `null`.
 - a **JSON object type** defined by a list of key-value pairs (we call them properties) within braces. A property is written as an identifier for the key, a colon and finally the type of its value.  
-For example, `{a:string, b:number}` defines the type for an object with two key-value pairs: the first (`a`) should be associated with a string value, while the second (`b`) is associated with a number. It would thus deem valid the JSON object `{"a":"hello","b":3}`.  
-The key does not need to be written within quotes if it is an *ordinary* identifier, i.e. it starts with a letter and only uses letters, numbers and underscores. But if the key name is the same as a keyword or uses *strange* characters such as a dollar sign, a dash or a dot, it must be put within quotes.  
-Here are a few remarks about keys:
+  For example, `{a:string, b:number}` defines the type for an object with two key-value pairs: the first (`a`) should be associated with a string value, while the second (`b`) is associated with a number. It would thus deem valid the JSON object `{"a":"hello","b":3}`.  
+  The key does not need to be written within quotes if it is an *ordinary* identifier, i.e. it starts with a letter and only uses letters, numbers and underscores. But if the key name is the same as a keyword or uses *strange* characters such as a dollar sign, a dash or a dot, it must be put within quotes.  
+  Here are a few remarks about keys:
   - in a JSON object, all keys must be different (this is checked by the schema validator), and there is no ordering between properties within a single object;
   - all keys specified in the schema must appear in the object, unless they are marked as *optional* by appending a question mark (`?`) to the key ;
   - the keys are always quoted strings in the JSON value; to simplify the JSON-RNC schema a key does not have to be quoted it only contains alphanumeric characters;
@@ -54,7 +54,7 @@ This specification of JSON-RNC definitions is formalized the following [EBNF gra
 
     definitions = "start" = type | {definition} ;
     definition  = (identifier | string ) , ["=" , types] ; 
-
+    
     types       = type , ( {"," , type} | {"|" , type} ) ;
     type        = ("string" | "integer" | "number" | "boolean" | "null"     (* primitive types *) 
                    | identifier | string                                    (* name of a user defined type *) 
@@ -70,7 +70,7 @@ This specification of JSON-RNC definitions is formalized the following [EBNF gra
                   | "pattern" | "minLength" | "maxLength"                           (* for strings *)
                   | "minItems" | "maxItems"                                         (* for arrays *)
                   | "minProperties" | "maxProperties";                              (* for objects *)
-
+    
     identifier  = letter , { letter | digit | "_" } ;
     number      = [ "-" ], digit, { digit } ["." , digit, { digit }];
     string      =   "'" , character , { character } , "'" 
@@ -115,7 +115,7 @@ are validated against the above schema, it will validate the first two JSON but 
     name :: string expected =>null
     id :: object expected:true
     address :: illegal facet: value 3 not between 10 and 100
-
+    
     3 objects read: 1 invalid
 
 The first line indicates the record number of the invalid JSON object (limited to 100 characters) and then indicates that wrong types were encountered for `name` and `id`, while the value for the `address` property does not lie between the `minimum` and `maximum` allowed bounds.
@@ -126,20 +126,20 @@ Here is our formulation of the [original example of Egbert Teeselink][]
 
     ## adaptation of the "contrived example" of relax-json given at
     ##     https://github.com/eteeselink/relax-json
-
+    
     start = [BookList | Store]
-
+    
     BookList = { books: [ Book ], owner: string }
-
+    
     Book = {
       title: string, subtitle?: string, author: string,
       ISBN: string,  weight: number,    type: BookType,
       # add keys with 'special' names
       "number"?: integer, "$id"?: string 
     }
-
+    
     Store = { name: string, url: string }
-
+    
     BookType = /Paperback/ | /Hardcover/
 
 which validates the following JSON array
@@ -205,6 +205,7 @@ If no JSON lines file is specified, it validates the standard input.
 
 *Command line arguments*
 
+- *-sl* or *--slurp* : consider the input file as a single JSON object 
 - *-s* or *--split* : if multiple JSON objects are on a single line or if a JSON spans multiple lines, the validator will split and merge them before validation. This argument is set by default if the source file has a `.json` extension.
 - *-id* : objects that do not conform to the schema are usually identified by their line number in the file. If another field or sequence of fields could prove more useful as identification, it can be specified as the value for the `-id` optional flag. Its value is a list of keys each separated by a slash (e.g. `'_id/$oid'`) ([JSON Pointer][] notation). When the '-id' flag is given, the validator will check that ids are not repeated within the whole file.
 - *-st* or *--stats* : at the end of execution, output the number of occurrences of each error message
@@ -218,6 +219,12 @@ If no JSON lines file is specified, it validates the standard input.
 
 If the JSON file has objects spanning many lines of the input, its format can be reorganized with this filter that reads the standard input for JSON objects and outputs each JSON object on a single line. Newlines within strings are replaced with `\n` so that they are correctly read back. This is the process used by the *-s* command argument of the validator.
 
+This process can be slow for dealing with a single JSON object spanning thousands of lines (e.g. a dictionary with many entries). In this case, it will be more efficient to use the *--slurp" argument or the following Unix filter:
+
+```
+tr -d '\n' < f.json | ./ValidateJsonRnc.py schema.jsonrnc 
+```
+
 **Parsing** the schema can be also done separately to produce on stdout a pretty-printed JSON file with the Python data structure using:
 
     ./ParseJsonRnc.py schema.jsonrnc
@@ -225,23 +232,22 @@ If the JSON file has objects spanning many lines of the input, its format can be
 
 # 6. Installation
 
-Python 2.7 source files are in the `Src` directory and a few examples can be found in the `Tests` directory.
+Python 3 source files are in the `Src` directory and a few examples can be found in the `Tests` directory.
 
-  [JSON Pointer]: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-07#section-5
-  [JSON Schema V-7]: http://json-schema.org/documentation.html "JSON Schema - Documentation"
-  [JSON schema]: http://json-schema.org "JSON Schema and Hyper-Schema"
-  [original example of Egbert Teeselink]: https://github.com/eteeselink/relax-json
-  [EBNF grammar]: http://www.wikiwand.com/en/Extended_Backus–Naur_Form
-  [XML Schema]: http://www.w3.org/TR/xmlschema-2/#rf-facets "XML Schema Part 2: Datatypes Second Edition"
-  [JSON-Schema]: http://json-schema.org/latest/json-schema-validation.html "JSON Schema: interactive and non interactive validation"
-  [Guy Lapalme]: http://www.iro.umontreal.ca/~lapalme
-  [JSON]: http://json.org "JSON"
-  [JSON lines]: http://jsonlines.org "JSON Lines"
-  [XML jargon]: http://www.iro.umontreal.ca/~lapalme/ForestInsteadOfTheTrees/HTML/index.html "XML: Looking at the Forest Instead of the Trees"
-  [JSON schema]: http://json-schema.org "JSON Schema and Hyper-Schema"
-  [XML Schema]: http://www.w3.org/XML/Schema "W3C XML Schema"
-  [Relax-NG]: http://www.relaxng.org "RELAX NG home page"
-  [compact syntax of Relax-NG]: http://www.relaxng.org/compact-20021121.html "RELAX NG Compact Syntax"
-  [unimplemented proposal]: https://github.com/eteeselink/relax-json
-  [Egbert Teeselink]: http://superset.eu "superset - good software"
-  
+[JSON Pointer]: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-07#section-5
+[JSON Schema V-7]: http://json-schema.org/documentation.html "JSON Schema - Documentation"
+[JSON schema]: http://json-schema.org "JSON Schema and Hyper-Schema"
+[original example of Egbert Teeselink]: https://github.com/eteeselink/relax-json
+[EBNF grammar]: http://www.wikiwand.com/en/Extended_Backus–Naur_Form
+[XML Schema]: http://www.w3.org/TR/xmlschema-2/#rf-facets "XML Schema Part 2: Datatypes Second Edition"
+[JSON-Schema]: http://json-schema.org/latest/json-schema-validation.html "JSON Schema: interactive and non interactive validation"
+[Guy Lapalme]: http://www.iro.umontreal.ca/~lapalme
+[JSON]: http://json.org "JSON"
+[JSON lines]: http://jsonlines.org "JSON Lines"
+[XML jargon]: http://www.iro.umontreal.ca/~lapalme/ForestInsteadOfTheTrees/HTML/index.html "XML: Looking at the Forest Instead of the Trees"
+[JSON schema]: http://json-schema.org "JSON Schema and Hyper-Schema"
+[XML Schema]: http://www.w3.org/XML/Schema "W3C XML Schema"
+[Relax-NG]: http://www.relaxng.org "RELAX NG home page"
+[compact syntax of Relax-NG]: http://www.relaxng.org/compact-20021121.html "RELAX NG Compact Syntax"
+[unimplemented proposal]: https://github.com/eteeselink/relax-json
+[Egbert Teeselink]: http://superset.eu "superset - good software"

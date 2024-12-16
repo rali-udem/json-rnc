@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
 
 ####### Validation of a JSON file according to a JSON-rnc schema
@@ -6,12 +6,7 @@
 ##   revision for adding statistics on error messages, May 2015
 ########################################################################
 
-## for displaying UTF-8 in the Textmate console
-import sys 
-reload(sys) 
-sys.setdefaultencoding("utf-8")
-
-import re,pprint,json,os,datetime,argparse
+import pprint,json,os,datetime,argparse,sys
 
 ## flag for debugging
 traceRead=False
@@ -48,7 +43,7 @@ def duplicate_check_hook(pairs):
 #   when no message are logged, print something on stderr every 10000 records
 def validateStream(schema,idStr,stream,logMessages):
     if '$schema' not in schema or schema['$schema']!='http://json-schema.org/draft-07/schema#':
-        print errorSchema([],"bad schema!!!")
+        print (errorSchema([],"bad schema!!!",""))
         return
     idFn=None if idStr==None else lambda o:select(idStr.split("/"),o)
     nb=0
@@ -58,7 +53,7 @@ def validateStream(schema,idStr,stream,logMessages):
     allIds=dict()
     for inJson in stream:
         try:
-            if traceRead:print "$$$inJson="+inJson
+            if traceRead:print ("$$$inJson="+inJson)
             nb+=1
             obj=json.loads(inJson,object_pairs_hook=duplicate_check_hook)
             id=str(nb)
@@ -66,7 +61,7 @@ def validateStream(schema,idStr,stream,logMessages):
                 val=idFn(obj)
                 if val!=None:
                     if val in allIds:  # check for duplicate id
-                        print "record %d :duplicate id:%s already used for record no %d"%(nb,val,allIds[val])
+                        print ("record %d :duplicate id:%s already used for record no %d"%(nb,val,allIds[val]))
                     else:
                         allIds[val]=nb
                     id=val
@@ -76,19 +71,19 @@ def validateStream(schema,idStr,stream,logMessages):
                 sys.stderr.write("Processing record "+str(nb)+"\n")
         except ValueError as mess:
             if logMessages:
-                print "Item "+str(nb)+": bad json object:"+str(mess)
+                print ("Item "+str(nb)+": bad json object:"+str(mess))
             nbBad+=1
         except KeyError as mess:
             if logMessages:
-                print "Item "+str(nb)+":"+mess.args[0]
+                print ("Item "+str(nb)+":"+mess.args[0])
             nbDup+=1
     if nbInvalid==0 and nbBad==0 and nbDup==0:
         if nb==1:
-            print "The object is valid"
+            print ("The object is valid")
         else:
-            print "The "+showNum(nb)+" objects are valid"
+            print ("The "+showNum(nb)+" objects are valid")
     else:
-        print showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad, " + showNum(nbDup)+ " with duplicate fields"
+        print (showNum(nb)+" objects read: "+showNum(nbInvalid)+" invalid, "+showNum(nbBad)+" bad, " + showNum(nbDup)+ " with duplicate fields")
     return nbInvalid
 
 
@@ -96,12 +91,14 @@ def validateStream(schema,idStr,stream,logMessages):
 ### validate a series of json objects within a file according to a schema
 #   returns the number of invalid objects
 def validateObjects(schema,idStr,fileName,logMessages):
-    if traceRead:print "validateObjects(%s,%s)"%(schema,fileName)
+    if traceRead:print ("validateObjects(%s,%s)"%(schema,fileName))
     if fileName==None:
-        return validateStream(schema,idStr,jsonSplitter(sys.stdin.read()),logMessages)
+        # it seems that sys.stdin.read() does not work from the console... but readlines() does
+        splitStdin = jsonSplitter("".join(sys.stdin.readlines()))  
+        return validateStream(schema,idStr,splitStdin,logMessages)
     else:
         if not os.path.exists(fileName):
-            print "json file not found: "+fileName
+            print ("json file not found: "+fileName)
             return 1
         return validateStream(schema,idStr,jsonSplitter(open(fileName).read()),logMessages)
 
@@ -109,7 +106,7 @@ def validateObjects(schema,idStr,fileName,logMessages):
 #  validate lines in a file each of which is json object
 #  returns the number of invalid lines
 def validateLines(schema,idStr,fileName,logMessages):
-    if traceRead:print "validateLines(%s,%s)"%(schema,fileName)
+    if traceRead:print ("validateLines(%s,%s)"%(schema,fileName))
     return validateStream(schema,idStr,open(fileName) if fileName!=None else sys.stdin,logMessages)        
 
 ## taken from http://stackoverflow.com/questions/237079/how-to-get-file-creation-modification-date-times-in-python
@@ -119,7 +116,7 @@ def modificationDate(filename):
 
 ## save a schema as a JSON Schema file
 def saveSchema(schema,pythonSchemaFileName):
-    if traceRead:print "saveSchema:"+pythonSchemaFileName
+    if traceRead:print ("saveSchema:"+pythonSchemaFileName)
     out=open(pythonSchemaFileName,"w")
     # json.dump(schema,out,indent=3,separators=(',', ': '))
     ppJson(out,schema)
@@ -127,18 +124,18 @@ def saveSchema(schema,pythonSchemaFileName):
 
 ## read an existing schema
 def readSchema(pythonSchemaFileName):
-    if traceRead:print "readSchema:"+pythonSchemaFileName
+    if traceRead:print ("readSchema:"+pythonSchemaFileName)
     schema = json.load(open(pythonSchemaFileName))
     if traceRead:
-        print "schema read:\n"
+        print ("schema read:\n")
         pprint.pprint(schema)
     return schema
     
 ## find a JSON-RNC schema: if the JSON Schema file is older than the JSON-RNC schema parse it
 def getSchema(jsonrncFile):
-    if traceRead:print "getSchema:"+jsonrncFile
+    if traceRead:print ("getSchema:"+jsonrncFile)
     if not os.path.exists(jsonrncFile):
-        print "schema file not found: "+jsonrncFile
+        print ("schema file not found: "+jsonrncFile)
         return None
     pythonSchemaFileName=jsonrncFile+".json"
     if os.path.exists(pythonSchemaFileName):
@@ -147,7 +144,7 @@ def getSchema(jsonrncFile):
             return readSchema(pythonSchemaFileName)
     schema=parseJsonRnc(open(jsonrncFile))
     if type(schema) is int:
-        print str(schema)+" errors found in schema in "+pythonSchemaFileName
+        print (str(schema)+" errors found in schema in "+pythonSchemaFileName)
         return None
     return saveSchema(schema,pythonSchemaFileName)
 
@@ -155,6 +152,7 @@ def getSchema(jsonrncFile):
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description="Parse a JSON-rnc schema and validate a JSON file according to it. "+
                             "The number of invalid objects (modulo 256) is returned as the exit code of the program.")
+    parser.add_argument("--slurp","-sl",help="Consider the input as a single JSON object",action="store_true")
     parser.add_argument("--split","-s",help="Separate the input JSON objects each a single line.",action="store_true")
     parser.add_argument("--debug",help="Trace calls for debugging",action="store_true")
     parser.add_argument("-id",help="use this selector as a list of keys each separated by a slash, a.k.a. JSON pointer, (e.g. '_id/$oid') "
@@ -171,7 +169,9 @@ if __name__ == '__main__':
         traceRead=True
     schema = getSchema(args.schema)
     if schema!=None:
-        if args.split:
+        if args.slurp:
+            nbInvalid = validateStream(schema,args.id,[open(args.json_file,"r").read()],not(args.nolog))
+        elif args.split:
             nbInvalid=validateObjects(schema,args.id,args.json_file,not(args.nolog))
         else:
             nbInvalid=validateLines(schema,args.id,args.json_file,not(args.nolog))
