@@ -225,7 +225,7 @@ This process can be slow for dealing with a single JSON object spanning thousand
 tr -d '\n' < f.json | ./ValidateJsonRnc.py schema.jsonrnc 
 ```
 
-**Parsing** the schema can be also done separately to produce on stdout a pretty-printed JSON file with the Python data structure using:
+**Parsing** the schema can be also done separately to produce on stdout to produce a JSON-schema file using:
 
     ./ParseJsonRnc.py schema.jsonrnc
 
